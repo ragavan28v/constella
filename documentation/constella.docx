@@ -1,0 +1,2437 @@
+# CONSTELLA
+
+# Software Architecture Specification (SAS)
+
+**Version:** 1.0
+
+---
+
+# 1. Introduction
+
+## 1.1 Purpose
+
+This document defines the complete software architecture of Constella.
+
+Its purpose is to eliminate ambiguity during development by defining:
+
+* System architecture
+* Core entities
+* User flow
+* Screen flow
+* Storage architecture
+* Database structure
+* Search architecture
+* AI architecture
+* Synchronization architecture
+* Component architecture
+
+This document is written for developers and AI coding agents.
+
+Every implementation decision should follow this specification.
+
+---
+
+# 1.2 What is Constella?
+
+Constella is a **Local-First, Space-Based Personal Knowledge Operating System**.
+
+Users create **Spaces** for meaningful topics in their lives.
+
+Examples
+
+* React
+* Machine Learning
+* SpendMap
+* Dream House
+* Photography
+* Startup
+* Fitness
+
+Instead of storing scattered notes, screenshots, links and code snippets, every piece of information becomes part of its corresponding Space.
+
+A Space continuously evolves as users learn, build and organize.
+
+---
+
+# 1.3 Primary Objectives
+
+The system must achieve the following objectives.
+
+• Organize knowledge around Spaces instead of files.
+
+• Work completely offline.
+
+• Synchronize using user-owned cloud storage.
+
+• Support long-term knowledge growth.
+
+• Connect related knowledge.
+
+• Make every piece of information searchable.
+
+• Never lose user data.
+
+• Scale to tens of thousands of Artifacts.
+
+---
+
+# 2. System Architecture
+
+The complete system follows the architecture below.
+
+```text
+                          CONSTELLA
+
+┌───────────────────────────────────────────────────────────────┐
+│                        User Interface                         │
+│                                                               │
+│ Home │ Search │ Spaces │ Settings │ Quick Capture             │
+└───────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌───────────────────────────────────────────────────────────────┐
+│                     Application Layer                         │
+│                                                               │
+│ Space Manager                                                 │
+│ Artifact Manager                                              │
+│ Template Engine                                               │
+│ Relationship Engine                                           │
+│ Timeline Engine                                               │
+│ Search Engine                                                 │
+│ AI Engine                                                     │
+│ Storage Engine                                                │
+└───────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌───────────────────────────────────────────────────────────────┐
+│                         Local Layer                           │
+│                                                               │
+│ SQLite / IndexedDB                                            │
+│ Local File Cache                                               │
+│ Search Index                                                   │
+│ Media Cache                                                    │
+└───────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌───────────────────────────────────────────────────────────────┐
+│                        Sync Layer                             │
+│                                                               │
+│ Sync Queue                                                    │
+│ Conflict Resolver                                              │
+│ Version Manager                                                │
+│ Upload Manager                                                 │
+│ Download Manager                                               │
+└───────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌───────────────────────────────────────────────────────────────┐
+│                     Storage Providers                         │
+│                                                               │
+│ Local Disk                                                    │
+│ Google Drive                                                  │
+│ Dropbox                                                       │
+│ OneDrive                                                      │
+│ Future Providers                                              │
+└───────────────────────────────────────────────────────────────┘
+```
+
+---
+
+# 3. Core Object Hierarchy
+
+Every object inside Constella follows the same hierarchy.
+
+```text
+Universe
+
+│
+
+├── Spaces
+
+│      ├── Artifacts
+
+│      │      ├── Blocks
+
+│      │      ├── Attachments
+
+│      │      └── Relationships
+
+│      │
+
+│      ├── Timeline
+
+│      ├── Dashboard
+
+│      ├── Goals
+
+│      └── Settings
+
+│
+
+└── User Settings
+```
+
+There are only four persistent object types.
+
+Universe
+
+Space
+
+Artifact
+
+Block
+
+Everything else is derived.
+
+---
+
+# 4. Universe
+
+## Description
+
+Universe is the root container.
+
+Each user owns exactly one Universe.
+
+The Universe contains every Space created by the user.
+
+The Universe itself contains no knowledge.
+
+It only organizes Spaces.
+
+---
+
+## Responsibilities
+
+Maintain Space Registry.
+
+Maintain Global Search Index.
+
+Maintain Global Timeline.
+
+Maintain Storage Configuration.
+
+Maintain User Preferences.
+
+Maintain Global Relationships.
+
+---
+
+## Constraints
+
+Only one Universe per user.
+
+Cannot be deleted accidentally.
+
+Contains unlimited Spaces.
+
+---
+
+# 5. Space
+
+## Description
+
+Space is the primary object in Constella.
+
+Every meaningful topic becomes one Space.
+
+Examples
+
+React
+
+SpendMap
+
+Dream House
+
+Machine Learning
+
+Photography
+
+AWS
+
+Fitness
+
+A Space represents a long-term area of knowledge.
+
+Everything related to that topic belongs inside the Space.
+
+---
+
+## Responsibilities
+
+Own Artifacts.
+
+Maintain Dashboard.
+
+Maintain Timeline.
+
+Maintain Search Scope.
+
+Maintain Progress.
+
+Maintain Relationships.
+
+Maintain Settings.
+
+---
+
+## Properties
+
+```text
+Space
+
+id
+
+name
+
+description
+
+icon
+
+coverImage
+
+template
+
+color
+
+createdAt
+
+updatedAt
+
+favorite
+
+archived
+
+progress
+
+tags
+
+settings
+```
+
+---
+
+## Lifecycle
+
+Create
+
+↓
+
+Generate Template
+
+↓
+
+Generate Dashboard
+
+↓
+
+Ready
+
+↓
+
+User Adds Artifacts
+
+↓
+
+Space Grows
+
+↓
+
+Archive
+
+Spaces are never deleted by default.
+
+Archived Spaces remain searchable.
+
+---
+
+# 6. Space Templates
+
+Templates define the initial structure of a Space.
+
+Templates never restrict customization.
+
+Supported Templates
+
+Learning
+
+Project
+
+Research
+
+Dream
+
+Personal
+
+Blank
+
+Each template generates
+
+Dashboard Layout
+
+Default Widgets
+
+Suggested Artifact Types
+
+Suggested Goals
+
+Suggested Tags
+
+Suggested Views
+
+Templates may be changed later.
+
+---
+
+# 7. Artifact
+
+## Description
+
+Artifacts are the content inside a Space.
+
+Every Artifact follows one common architecture.
+
+Different Artifact Types only change presentation.
+
+---
+
+## Supported Types
+
+Knowledge
+
+Snippet
+
+Bug
+
+Idea
+
+Resource
+
+Media
+
+Task
+
+Goal
+
+Bookmark
+
+Document
+
+Voice Note
+
+Timeline Event
+
+Future versions should allow plugin-defined Artifact types.
+
+---
+
+## Responsibilities
+
+Store Content.
+
+Store Metadata.
+
+Store Relationships.
+
+Store History.
+
+Store Blocks.
+
+Store Attachments.
+
+---
+
+## Properties
+
+```text
+Artifact
+
+id
+
+spaceId
+
+type
+
+title
+
+description
+
+status
+
+priority
+
+createdAt
+
+updatedAt
+
+favorite
+
+archived
+
+tags
+
+metadata
+
+blocks
+
+attachments
+```
+
+---
+
+## Lifecycle
+
+Create
+
+↓
+
+Edit
+
+↓
+
+Auto Save
+
+↓
+
+Index
+
+↓
+
+Relationship Detection
+
+↓
+
+Sync Queue
+
+↓
+
+Background Sync
+
+↓
+
+Archive
+
+Artifacts should never require manual saving.
+
+---
+
+# 8. Blocks
+
+Blocks are the smallest editable units.
+
+Every Artifact is composed of Blocks.
+
+---
+
+## Supported Block Types
+
+Heading
+
+Paragraph
+
+Checklist
+
+Bullet List
+
+Numbered List
+
+Code
+
+Inline Code
+
+Image
+
+Gallery
+
+Video
+
+Audio
+
+Table
+
+Quote
+
+Divider
+
+Callout
+
+Mathematics
+
+Mermaid Diagram
+
+Website Embed
+
+PDF
+
+File
+
+Future Block types should be supported through extensions.
+
+---
+
+## Properties
+
+```text
+Block
+
+id
+
+artifactId
+
+type
+
+position
+
+content
+
+metadata
+```
+
+Blocks are ordered using the position property.
+
+---
+
+# 9. Attachments
+
+Attachments store external files.
+
+Supported Types
+
+Images
+
+Videos
+
+Audio
+
+PDF
+
+ZIP
+
+Source Code
+
+Documents
+
+Attachments are never embedded directly inside the database.
+
+Only metadata is stored.
+
+Files remain inside the Storage Engine.
+
+---
+
+# 10. Relationships
+
+Relationships connect knowledge.
+
+Every Relationship contains
+
+```text
+Relationship
+
+id
+
+sourceId
+
+targetId
+
+type
+
+createdAt
+```
+
+Supported Relationship Types
+
+Related
+
+Depends On
+
+Inspired By
+
+Uses
+
+References
+
+Parent
+
+Child
+
+Duplicate
+
+Custom
+
+Relationships are always bidirectional.
+
+Deleting one Artifact never automatically deletes connected Artifacts.
+
+---
+
+# 11. Timeline
+
+Every Space maintains an automatic timeline.
+
+Users cannot directly edit timeline entries.
+
+Timeline records
+
+Space Created
+
+Artifact Created
+
+Artifact Updated
+
+Artifact Archived
+
+Goal Completed
+
+Media Uploaded
+
+Relationship Added
+
+Timeline is generated automatically by application events.
+
+Timeline entries are immutable.
+
+---
+
+# 12. Dashboard
+
+Every Space opens with its Dashboard.
+
+Dashboard contains widgets.
+
+Widgets
+
+Progress
+
+Recent Artifacts
+
+Pinned Artifacts
+
+Goals
+
+Timeline
+
+Continue Working
+
+Knowledge Statistics
+
+AI Suggestions
+
+Relationship Graph
+
+Recent Activity
+
+Users may
+
+Move
+
+Resize
+
+Hide
+
+Pin
+
+Widgets.
+
+Dashboards are stored per Space.
+
+---
+
+# 13. Search Engine
+
+Search is one of the core engines of Constella.
+
+The Search Engine indexes
+
+Spaces
+
+Artifacts
+
+Blocks
+
+Tags
+
+OCR Text
+
+Code
+
+Attachments
+
+Relationships
+
+Search never communicates with cloud providers.
+
+Only the local search index is queried.
+
+This guarantees instant search regardless of internet connectivity.
+
+---
+
+# 14. Search Index
+
+Every modification automatically updates the Search Index.
+
+Workflow
+
+```text
+Artifact Updated
+
+↓
+
+Block Parser
+
+↓
+
+Keyword Extraction
+
+↓
+
+Tag Extraction
+
+↓
+
+OCR Extraction
+
+↓
+
+Relationship Update
+
+↓
+
+Search Index Update
+```
+
+The Search Index should remain fully incremental.
+
+Rebuilding the complete index should rarely be necessary.
+
+---
+
+# 15. Database Architecture
+
+## Overview
+
+Constella uses a **Local-First Database**.
+
+The local database is the single source of truth.
+
+Cloud storage is **never queried directly** by the application.
+
+Every operation reads and writes to the local database.
+
+Cloud providers only receive synchronized copies.
+
+Recommended Technologies
+
+Desktop (Electron/Tauri)
+
+SQLite
+
+Web
+
+IndexedDB (Dexie)
+
+Mobile
+
+SQLite
+
+Every platform must expose the same repository interface.
+
+---
+
+# 16. Database Entity Diagram
+
+```text
+Universe
+│
+├── Spaces
+│      │
+│      ├── Artifacts
+│      │      │
+│      │      ├── Blocks
+│      │      ├── Attachments
+│      │      ├── Tags
+│      │      └── Relationships
+│      │
+│      ├── Dashboard
+│      ├── Timeline
+│      └── Settings
+│
+└── User Settings
+```
+
+---
+
+# 17. Space Table
+
+```
+Space
+
+id
+name
+description
+icon
+coverImage
+template
+color
+favorite
+archived
+progress
+createdAt
+updatedAt
+settings
+```
+
+Each record represents one Space.
+
+No Space contains actual content.
+
+Content belongs to Artifacts.
+
+---
+
+# 18. Artifact Table
+
+```
+Artifact
+
+id
+spaceId
+type
+title
+description
+status
+priority
+favorite
+archived
+createdAt
+updatedAt
+metadata
+```
+
+Every Artifact belongs to one Space.
+
+Artifact type determines its UI.
+
+Examples
+
+Knowledge
+
+Bug
+
+Snippet
+
+Idea
+
+Resource
+
+Goal
+
+Media
+
+Task
+
+Bookmark
+
+---
+
+# 19. Block Table
+
+```
+Block
+
+id
+artifactId
+type
+position
+content
+metadata
+```
+
+Blocks are ordered.
+
+Deleting an Artifact deletes its Blocks.
+
+---
+
+# 20. Relationship Table
+
+```
+Relationship
+
+id
+
+sourceArtifactId
+
+targetArtifactId
+
+relationshipType
+
+createdAt
+```
+
+Relationships are lightweight.
+
+No duplicate data.
+
+---
+
+# 21. Tag Table
+
+```
+Tag
+
+id
+
+name
+
+color
+```
+
+---
+
+# 22. ArtifactTag
+
+```
+ArtifactTag
+
+artifactId
+
+tagId
+```
+
+Many-to-many relationship.
+
+---
+
+# 23. Attachment Table
+
+```
+Attachment
+
+id
+
+artifactId
+
+fileName
+
+mimeType
+
+storagePath
+
+thumbnail
+
+size
+
+createdAt
+```
+
+Only metadata is stored.
+
+Actual files remain in Storage.
+
+---
+
+# 24. Timeline Table
+
+```
+Timeline
+
+id
+
+spaceId
+
+event
+
+entityId
+
+entityType
+
+timestamp
+```
+
+Timeline is append-only.
+
+Never edited.
+
+---
+
+# 25. Search Index
+
+```
+SearchIndex
+
+entityId
+
+entityType
+
+keywords
+
+content
+
+tags
+
+ocrText
+
+lastIndexed
+```
+
+Used only by Search Engine.
+
+Never edited manually.
+
+---
+
+# 26. Storage Engine
+
+Storage Engine abstracts every storage provider.
+
+The application never directly communicates with Google Drive.
+
+Architecture
+
+```text
+Application
+
+↓
+
+Repository Layer
+
+↓
+
+Storage Engine
+
+↓
+
+Storage Adapter
+
+↓
+
+Google Drive
+
+Dropbox
+
+OneDrive
+
+Local Storage
+```
+
+Changing providers should never affect application logic.
+
+---
+
+# 27. Storage Adapter Interface
+
+Every provider implements the same interface.
+
+Required methods
+
+```
+connect()
+
+disconnect()
+
+upload()
+
+download()
+
+delete()
+
+rename()
+
+move()
+
+createFolder()
+
+list()
+
+getMetadata()
+
+sync()
+
+restore()
+```
+
+Every provider behaves identically.
+
+---
+
+# 28. BYOS Folder Structure
+
+Every provider uses the same folder hierarchy.
+
+```
+Constella/
+
+config/
+
+spaces/
+
+media/
+
+backups/
+
+exports/
+
+cache/
+```
+
+Inside spaces
+
+```
+spaces/
+
+react/
+
+spendmap/
+
+docker/
+
+dream-house/
+```
+
+Inside every Space
+
+```
+artifacts/
+
+attachments/
+
+exports/
+
+metadata/
+```
+
+The folder structure must remain identical across providers.
+
+---
+
+# 29. Artifact Storage
+
+Every Artifact is stored independently.
+
+Example
+
+```
+React/
+
+artifacts/
+
+knowledge/
+
+hooks.json
+
+bug/
+
+firebase-auth.json
+
+snippet/
+
+custom-hook.json
+
+resource/
+
+official-docs.json
+```
+
+Advantages
+
+Smaller sync
+
+Easy recovery
+
+Conflict isolation
+
+Independent versioning
+
+Scalable
+
+---
+
+# 30. Media Storage
+
+Media never lives inside the database.
+
+Example
+
+```
+media/
+
+react/
+
+images/
+
+videos/
+
+documents/
+
+audio/
+```
+
+Database stores only
+
+fileId
+
+path
+
+thumbnail
+
+metadata
+
+---
+
+# 31. Synchronization Engine
+
+Synchronization is asynchronous.
+
+Workflow
+
+```
+Create Artifact
+
+↓
+
+Save Database
+
+↓
+
+Update Search
+
+↓
+
+Queue Sync
+
+↓
+
+Background Upload
+
+↓
+
+Verify
+
+↓
+
+Done
+```
+
+The user never waits.
+
+---
+
+# 32. Sync Queue
+
+Every modification creates one Sync Job.
+
+```
+SyncJob
+
+id
+
+entityId
+
+operation
+
+priority
+
+retryCount
+
+status
+
+createdAt
+```
+
+Operations
+
+Create
+
+Update
+
+Delete
+
+Move
+
+Rename
+
+Retry
+
+---
+
+# 33. Offline Mode
+
+Offline mode is default behavior.
+
+Supported offline
+
+Create Spaces
+
+Create Artifacts
+
+Edit Blocks
+
+Delete Artifacts
+
+Search
+
+Read Media
+
+Update Timeline
+
+Connect Relationships
+
+Everything except cloud synchronization.
+
+---
+
+# 34. Conflict Resolution
+
+Conflicts occur when multiple devices edit the same Artifact.
+
+Each Artifact stores
+
+```
+version
+
+lastModified
+
+deviceId
+
+syncVersion
+```
+
+Resolution
+
+```
+Same Version
+
+↓
+
+Ignore
+
+Different Version
+
+↓
+
+Create Conflict Copy
+
+↓
+
+Notify User
+```
+
+User decides the final merge.
+
+Never overwrite automatically.
+
+---
+
+# 35. UI Architecture
+
+The application contains only four primary screens.
+
+```
+Home
+
+Search
+
+Space
+
+Settings
+```
+
+Everything else exists inside Spaces.
+
+---
+
+# 36. Home Screen
+
+Displays
+
+Continue Working
+
+Pinned Spaces
+
+Recent Spaces
+
+Timeline
+
+Quick Capture
+
+AI Suggestions
+
+Storage Status
+
+Recent Activity
+
+Home never displays nested navigation.
+
+Its job is helping users resume work quickly.
+
+---
+
+# 37. Space Screen
+
+Every Space opens the same interface.
+
+```
+┌──────────────────────────────────────────┐
+
+Toolbar
+
+──────────────────────────────────────────
+
+Dashboard
+
+Artifacts
+
+Timeline
+
+Graph
+
+Goals
+
+──────────────────────────────────────────
+
+Workspace
+
+──────────────────────────────────────────
+
+Inspector
+
+└──────────────────────────────────────────┘
+```
+
+No page switching.
+
+Everything happens inside the current Space.
+
+---
+
+# 38. Artifact Explorer
+
+Displays Artifacts.
+
+Views
+
+Grid
+
+List
+
+Timeline
+
+Kanban
+
+Grouping
+
+Type
+
+Tag
+
+Status
+
+Date
+
+Sorting
+
+Recent
+
+Alphabetical
+
+Favorites
+
+Users choose their preferred view.
+
+---
+
+# 39. Artifact Editor
+
+Editor Layout
+
+```
+Title
+
+Metadata
+
+──────────────────
+
+Block Editor
+
+──────────────────
+
+Relationships
+
+History
+
+AI
+
+Attachments
+```
+
+Auto Save
+
+Undo
+
+Redo
+
+Block Drag
+
+Markdown Paste
+
+Image Paste
+
+Code Paste
+
+Everything happens in one editor.
+
+---
+
+# 40. Quick Capture
+
+Available globally.
+
+Desktop
+
+Ctrl + Shift + N
+
+Mobile
+
+Floating Action Button
+
+Supports
+
+Knowledge
+
+Bug
+
+Snippet
+
+Idea
+
+Bookmark
+
+Photo
+
+Voice Note
+
+Task
+
+Goal
+
+If a Space is already open
+
+↓
+
+Automatically assign Artifact.
+
+Otherwise
+
+↓
+
+Ask user to choose Space.
+
+Quick Capture should finish within five seconds.
+
+---
+
+# 41. Component Architecture
+
+The application follows a modular component architecture.
+
+Every UI element should be reusable.
+
+No business logic should exist inside UI components.
+
+The architecture is divided into:
+
+```text
+Application
+│
+├── Layout Components
+├── Feature Components
+├── Shared Components
+├── Editor Components
+├── Visualization Components
+└── System Components
+```
+
+---
+
+# 42. Layout Components
+
+These components define the application structure.
+
+```
+AppLayout
+
+TopBar
+
+Sidebar
+
+MainContent
+
+Inspector
+
+BottomNavigation (Mobile)
+
+ResizablePanel
+
+Modal
+
+Drawer
+
+ContextMenu
+```
+
+Responsibilities
+
+* Page layout
+* Navigation
+* Responsive behavior
+* Window management
+
+These components never contain business logic.
+
+---
+
+# 43. Feature Components
+
+Each feature is implemented as an independent module.
+
+```
+SpaceCard
+
+SpaceDashboard
+
+ArtifactExplorer
+
+ArtifactCard
+
+ArtifactEditor
+
+KnowledgeGraph
+
+Timeline
+
+QuickCapture
+
+SearchPanel
+
+GoalTracker
+
+StorageManager
+
+AIAssistant
+```
+
+Each feature owns only its own UI.
+
+Data comes from repositories or state management.
+
+---
+
+# 44. Editor Components
+
+The editor is the most important component in Constella.
+
+```
+BlockEditor
+
+HeadingBlock
+
+ParagraphBlock
+
+CodeBlock
+
+ImageBlock
+
+GalleryBlock
+
+ChecklistBlock
+
+TableBlock
+
+QuoteBlock
+
+CalloutBlock
+
+EmbedBlock
+
+MathBlock
+
+MermaidBlock
+
+DividerBlock
+```
+
+Every block follows the same interface.
+
+Users can
+
+Move
+
+Duplicate
+
+Delete
+
+Convert
+
+Collapse
+
+Expand
+
+Blocks.
+
+---
+
+# 45. Shared Components
+
+Reusable UI components.
+
+```
+Button
+
+Input
+
+Textarea
+
+Select
+
+Dropdown
+
+Tabs
+
+Tooltip
+
+Badge
+
+Avatar
+
+Icon
+
+ProgressBar
+
+Toast
+
+Dialog
+
+Card
+
+Loader
+
+EmptyState
+```
+
+These components are shared across the application.
+
+---
+
+# 46. State Management
+
+The application uses centralized state management.
+
+Recommended
+
+```
+Zustand
+```
+
+State should be divided into independent stores.
+
+```
+Universe Store
+
+Space Store
+
+Artifact Store
+
+Search Store
+
+Storage Store
+
+Settings Store
+
+AI Store
+
+Sync Store
+```
+
+Stores communicate only through defined actions.
+
+No direct mutation.
+
+---
+
+# 47. Repository Layer
+
+Every feature communicates through repositories.
+
+Never access the database directly from UI.
+
+```
+SpaceRepository
+
+ArtifactRepository
+
+RelationshipRepository
+
+SearchRepository
+
+StorageRepository
+
+SettingsRepository
+```
+
+Responsibilities
+
+Read
+
+Create
+
+Update
+
+Delete
+
+Query
+
+Repositories hide database implementation.
+
+Changing SQLite to another database should not affect the UI.
+
+---
+
+# 48. Search Architecture
+
+Search is implemented locally.
+
+Workflow
+
+```
+Artifact Updated
+
+↓
+
+Block Parser
+
+↓
+
+Token Extraction
+
+↓
+
+Tag Extraction
+
+↓
+
+OCR Extraction
+
+↓
+
+Search Index Update
+
+↓
+
+Ready
+```
+
+Searching never reads the database directly.
+
+Only the Search Index.
+
+This guarantees instant results.
+
+---
+
+# 49. Relationship Engine
+
+Relationships are maintained separately.
+
+Responsibilities
+
+Create Relationship
+
+Delete Relationship
+
+Suggest Relationships
+
+Calculate Graph
+
+Find Related Artifacts
+
+Relationship updates should never modify Artifacts directly.
+
+---
+
+# 50. AI Engine
+
+AI is context-aware.
+
+Every request follows the same pipeline.
+
+```
+Current Space
+
+↓
+
+Selected Artifact
+
+↓
+
+Related Artifacts
+
+↓
+
+Search Context
+
+↓
+
+Prompt Builder
+
+↓
+
+LLM
+
+↓
+
+Response
+```
+
+The AI never searches the entire Universe unless requested.
+
+Priority
+
+1. Current Artifact
+
+2. Current Space
+
+3. Related Spaces
+
+4. Entire Universe
+
+This minimizes token usage while improving relevance.
+
+---
+
+# 51. Notification System
+
+Notifications should be minimal.
+
+Supported events
+
+Synchronization Complete
+
+Synchronization Failed
+
+Backup Created
+
+Conflict Detected
+
+Goal Completed
+
+Storage Full
+
+AI Finished
+
+Notifications must never interrupt editing.
+
+---
+
+# 52. Backup Strategy
+
+Backups are independent of synchronization.
+
+Users can create:
+
+Manual Backup
+
+Automatic Daily Backup
+
+Automatic Weekly Backup
+
+Backup Format
+
+```
+.constella-backup
+```
+
+Contains
+
+Metadata
+
+Artifacts
+
+Relationships
+
+Media References
+
+Settings
+
+Users should be able to restore backups without overwriting the current Universe.
+
+---
+
+# 53. Import & Export
+
+Supported imports
+
+Markdown
+
+JSON
+
+PDF
+
+Images
+
+ZIP
+
+Future
+
+Notion Export
+
+Obsidian Vault
+
+Evernote Export
+
+Supported exports
+
+Markdown
+
+PDF
+
+JSON
+
+ZIP
+
+Complete Universe Backup
+
+Importing should preserve relationships whenever possible.
+
+---
+
+# 54. Security
+
+Application responsibilities
+
+Encrypt local credentials.
+
+Never store provider passwords.
+
+Use OAuth for cloud providers.
+
+Validate imported files.
+
+Prevent path traversal.
+
+Sanitize embedded content.
+
+Application never reads unrelated user files.
+
+---
+
+# 55. Performance Requirements
+
+Application startup
+
+< 2 seconds
+
+Space loading
+
+< 500 ms
+
+Artifact opening
+
+< 150 ms
+
+Search
+
+< 100 ms
+
+Quick Capture
+
+< 2 seconds
+
+Background synchronization must never block UI rendering.
+
+---
+
+# 56. Error Recovery
+
+Every operation should be recoverable.
+
+Examples
+
+Database unavailable
+
+↓
+
+Restore latest snapshot.
+
+Sync failure
+
+↓
+
+Retry automatically.
+
+Storage provider unavailable
+
+↓
+
+Continue offline.
+
+Application crash
+
+↓
+
+Recover unsaved editor state.
+
+Data preservation always has highest priority.
+
+---
+
+# 57. Recommended Technology Stack
+
+Desktop
+
+Tauri
+
+Frontend
+
+React
+
+TypeScript
+
+Routing
+
+React Router
+
+Styling
+
+Tailwind CSS
+
+UI Components
+
+shadcn/ui
+
+State Management
+
+Zustand
+
+Database
+
+SQLite
+
+ORM
+
+Drizzle ORM
+
+Editor
+
+TipTap
+
+Knowledge Graph
+
+React Flow
+
+Search
+
+FlexSearch
+
+Charts
+
+Recharts
+
+Forms
+
+React Hook Form
+
+Validation
+
+Zod
+
+Authentication
+
+OAuth 2.0
+
+Cloud APIs
+
+Google Drive API
+
+Dropbox API
+
+Microsoft Graph API
+
+Mobile (Future)
+
+Expo React Native
+
+The desktop and mobile applications should share business logic wherever possible.
+
+---
+
+# 58. Project Folder Structure
+
+```
+apps/
+│
+├── desktop/
+├── mobile/
+│
+packages/
+│
+├── ui/
+├── database/
+├── storage/
+├── search/
+├── ai/
+├── editor/
+├── graph/
+├── repositories/
+├── types/
+├── utils/
+├── hooks/
+└── shared/
+```
+
+Each package has a single responsibility.
+
+Avoid circular dependencies.
+
+---
+
+# 59. Development Principles
+
+Every feature added to Constella must satisfy these rules.
+
+1. Every Artifact belongs to one Space.
+
+2. Every modification saves automatically.
+
+3. Every Artifact is searchable.
+
+4. Every Artifact supports relationships.
+
+5. The local database is always the source of truth.
+
+6. Cloud providers are synchronization targets only.
+
+7. UI never communicates directly with storage providers.
+
+8. UI never communicates directly with the database.
+
+9. Business logic belongs to repositories and services.
+
+10. Search must remain functional offline.
+
+11. AI never modifies user data automatically.
+
+12. Synchronization must never block the user.
+
+13. Users always own their data.
+
+14. New features should extend the existing architecture rather than introduce parallel systems.
+
+15. Simplicity takes priority over feature count.
+
+---
+
+# 60. Implementation Roadmap
+
+The application should be developed in phases.
+
+### Phase 1 — Core Foundation
+
+* Local database
+* Space management
+* Artifact management
+* Block editor
+* Search
+* Auto-save
+
+### Phase 2 — Productivity
+
+* Relationships
+* Timeline
+* Templates
+* Dashboard
+* Quick Capture
+* Tags
+
+### Phase 3 — BYOS
+
+* Storage Engine
+* Google Drive
+* Dropbox
+* OneDrive
+* Background synchronization
+* Conflict resolution
+
+### Phase 4 — Intelligence
+
+* AI assistant
+* Semantic search
+* Relationship suggestions
+* OCR
+* Weekly summaries
+* Knowledge graph
+
+### Phase 5 — Ecosystem
+
+* Mobile application
+* Browser extension
+* VS Code extension
+* Shared Spaces
+* Plugin system
+
+---
+
+# 61. Final Architecture Summary
+
+Constella follows a **Local-First, Space-Centric architecture**.
+
+The application is built around four core entities:
+
+```
+Universe
+    ↓
+Spaces
+    ↓
+Artifacts
+    ↓
+Blocks
+```
+
+Every user action follows the same lifecycle:
+
+```
+User Action
+    ↓
+Update Local Database
+    ↓
+Update Search Index
+    ↓
+Update Relationships
+    ↓
+Refresh UI
+    ↓
+Queue Synchronization
+    ↓
+Background Sync to BYOS Provider
+```
+
+The application never depends on cloud availability for normal operation.
+
+Knowledge is always created, stored and accessed locally first.
+
+Cloud providers are responsible only for synchronization and backup through the Storage Engine.
+
+This architecture ensures:
+
+* Fast local performance
+* Offline functionality
+* User ownership of data
+* Provider independence
+* Scalable knowledge organization
+* Clear separation of concerns
+* Maintainable codebase
+* Extensible feature development
+
+This document defines the baseline architecture for Constella v1.0. All future development should extend this architecture rather than replace its core principles.
+

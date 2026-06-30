@@ -1,0 +1,1472 @@
+# CONSTELLA
+
+# UI Architecture Specification
+
+Version : 1.0
+
+---
+
+# 1. Purpose
+
+This document defines the complete User Interface architecture of Constella.
+
+The objective is to create a consistent, scalable and intuitive interface where users spend their time inside **Spaces** instead of navigating complex menus.
+
+The UI should feel like a calm workspace rather than a productivity dashboard.
+
+Every interaction should reduce friction while encouraging users to continuously build their Spaces.
+
+---
+
+# 2. Design Principles
+
+The interface follows these principles.
+
+• Minimal
+
+• Fast
+
+• Search First
+
+• Keyboard Friendly
+
+• Local First
+
+• Context Aware
+
+• Distraction Free
+
+• Responsive
+
+• Consistent
+
+The interface should never overwhelm users with unnecessary controls.
+
+Every action should require the minimum possible interaction.
+
+---
+
+# 3. Application Layout
+
+Desktop Layout
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Top Navigation                                                              │
+├──────────────┬──────────────────────────────────────────────┬───────────────┤
+│              │                                              │               │
+│              │                                              │               │
+│ Sidebar      │              Workspace                       │ Inspector     │
+│              │                                              │               │
+│              │                                              │               │
+├──────────────┴──────────────────────────────────────────────┴───────────────┤
+│ Status Bar                                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+Only five permanent UI regions exist.
+
+Top Navigation
+
+Sidebar
+
+Workspace
+
+Inspector
+
+Status Bar
+
+No floating permanent windows.
+
+---
+
+# 4. Top Navigation
+
+Purpose
+
+Global navigation.
+
+Contains
+
+Application Logo
+
+Global Search
+
+Quick Capture
+
+Notifications
+
+Sync Status
+
+Storage Provider
+
+Profile Menu
+
+Search occupies the center because searching is the primary navigation method.
+
+---
+
+# 5. Sidebar
+
+Purpose
+
+Navigate between Spaces.
+
+Structure
+
+```text
+Home
+
+Pinned Spaces
+
+Recent Spaces
+
+────────────────────
+
+All Spaces
+
+────────────────────
+
+Views
+
+Learning
+
+Projects
+
+Dreams
+
+Research
+
+Personal
+
+────────────────────
+
+Favorites
+
+Archive
+
+Trash
+
+────────────────────
+
+Storage
+
+Settings
+```
+
+Users can collapse the Sidebar.
+
+Collapsed mode shows icons only.
+
+---
+
+# 6. Home Screen
+
+Purpose
+
+Resume work quickly.
+
+Contains
+
+Continue Working
+
+Pinned Spaces
+
+Recently Opened
+
+Recent Activity
+
+Learning Progress
+
+AI Suggestions
+
+Recent Timeline
+
+Storage Status
+
+The Home screen never displays full Artifacts.
+
+Everything points back to Spaces.
+
+---
+
+# 7. Space Card
+
+Each Space appears as a reusable card.
+
+Example
+
+```text
+┌─────────────────────────────┐
+
+📘 React
+
+Learning
+
+Progress 72%
+
+42 Artifacts
+
+Updated Today
+
+─────────────────────────────
+
+Continue →
+
+└─────────────────────────────┘
+```
+
+Hover Actions
+
+Open
+
+Favorite
+
+Pin
+
+Rename
+
+Archive
+
+Delete
+
+Right Click
+
+Context Menu
+
+---
+
+# 8. Space Screen
+
+Opening a Space displays
+
+```text
+Space Header
+
+Toolbar
+
+────────────────────────
+
+Dashboard
+
+Artifacts
+
+Timeline
+
+Graph
+
+Goals
+
+────────────────────────
+
+Workspace
+```
+
+The top portion never changes.
+
+Only the active Workspace changes.
+
+---
+
+# 9. Space Header
+
+Displays
+
+Space Icon
+
+Space Name
+
+Description
+
+Progress
+
+Artifact Count
+
+Last Updated
+
+Breadcrumb
+
+Favorite Button
+
+Settings
+
+Everything important about the Space is visible without scrolling.
+
+---
+
+# 10. Toolbar
+
+Contains
+
+Create Artifact
+
+Search Within Space
+
+Filter
+
+Sort
+
+View
+
+AI
+
+Export
+
+Future
+
+Share
+
+---
+
+# 11. Dashboard
+
+The Dashboard summarizes the current Space.
+
+Widgets
+
+Progress
+
+Continue Working
+
+Pinned Artifacts
+
+Recent Artifacts
+
+Timeline
+
+Goals
+
+Knowledge Statistics
+
+Learning Streak
+
+AI Suggestions
+
+Recent Bugs
+
+Recent Resources
+
+Widgets can
+
+Move
+
+Resize
+
+Hide
+
+Pin
+
+Each Space stores its own Dashboard configuration.
+
+---
+
+# 12. Artifact Explorer
+
+Displays every Artifact.
+
+Supported Views
+
+Grid
+
+List
+
+Timeline
+
+Kanban
+
+Grouping
+
+Type
+
+Tags
+
+Date
+
+Status
+
+Sorting
+
+Recently Updated
+
+Recently Created
+
+Alphabetical
+
+Favorites
+
+Filtering
+
+Knowledge
+
+Bug
+
+Snippet
+
+Idea
+
+Resource
+
+Media
+
+Goal
+
+Task
+
+Bookmark
+
+Document
+
+Voice Note
+
+---
+
+# 13. Artifact Card
+
+```text
+┌─────────────────────────────┐
+
+💡 useEffect Cleanup
+
+Knowledge
+
+React
+
+Hooks
+
+Updated Today
+
+3 Relationships
+
+└─────────────────────────────┘
+```
+
+Click
+
+↓
+
+Open Editor
+
+Double Click
+
+↓
+
+Focused Editing Mode
+
+Right Click
+
+↓
+
+Context Menu
+
+---
+
+# 14. Context Menu
+
+Available for every Space and Artifact.
+
+Actions
+
+Open
+
+Duplicate
+
+Move
+
+Rename
+
+Archive
+
+Favorite
+
+Copy Link
+
+Delete
+
+Future
+
+Share
+
+Export
+
+---
+
+# 15. Artifact Editor
+
+Layout
+
+```text
+Title
+
+Metadata
+
+──────────────────────────────
+
+Block Editor
+
+──────────────────────────────
+
+Attachments
+
+Relationships
+
+History
+
+AI
+
+```
+
+Editor occupies the complete Workspace.
+
+Changes save automatically.
+
+No Save button.
+
+---
+
+# 16. Block Editor
+
+Supported Blocks
+
+Heading
+
+Paragraph
+
+Checklist
+
+Bullet List
+
+Numbered List
+
+Code
+
+Image
+
+Gallery
+
+Video
+
+Audio
+
+Quote
+
+Callout
+
+Divider
+
+Table
+
+Mermaid
+
+Math
+
+Embed
+
+PDF
+
+File
+
+Every Block supports
+
+Move
+
+Duplicate
+
+Delete
+
+Convert
+
+Collapse
+
+Expand
+
+Drag
+
+---
+
+# 17. Code Block
+
+Displays
+
+Language
+
+Syntax Highlighting
+
+Copy
+
+Collapse
+
+Expand
+
+Line Numbers
+
+Future
+
+Run
+
+Diff
+
+---
+
+# 18. Image Block
+
+Supports
+
+Fullscreen
+
+Zoom
+
+Resize
+
+OCR
+
+Annotations
+
+Caption
+
+Replace
+
+Images remain embedded inside Artifacts.
+
+---
+
+# 19. Inspector
+
+Purpose
+
+Display metadata without interrupting editing.
+
+Contains
+
+Properties
+
+Tags
+
+Relationships
+
+Recent Changes
+
+Version History
+
+Attachments
+
+AI Actions
+
+Related Artifacts
+
+Inspector changes based on the selected Artifact.
+
+---
+
+# 20. Status Bar
+
+Displays
+
+Auto Save Status
+
+Synchronization Status
+
+Offline Mode
+
+Current Storage Provider
+
+Artifact Count
+
+AI Status
+
+Every important background operation should be visible here.
+
+---
+
+# 21. Global Search
+
+Shortcut
+
+Ctrl + K
+
+Searches
+
+Spaces
+
+Artifacts
+
+Blocks
+
+Tags
+
+Relationships
+
+OCR
+
+Code
+
+Resources
+
+Media
+
+Timeline
+
+Results grouped as
+
+Spaces
+
+Artifacts
+
+Media
+
+Goals
+
+Resources
+
+Selecting a result immediately opens it.
+
+---
+
+# 22. Space Search
+
+Every Space includes its own search.
+
+Search scope is limited to the current Space.
+
+Supports
+
+Keyword Search
+
+Natural Language
+
+OCR
+
+Code Search
+
+Tag Search
+
+Search should update instantly while typing.
+
+---
+
+# 23. Quick Capture
+
+Quick Capture is always available.
+
+Desktop
+
+Toolbar
+
+Keyboard Shortcut
+
+Mobile
+
+Floating Action Button
+
+Supported Types
+
+Knowledge
+
+Snippet
+
+Bug
+
+Idea
+
+Bookmark
+
+Photo
+
+Voice Note
+
+Task
+
+Goal
+
+If a Space is already open
+
+↓
+
+Automatically assign Artifact.
+
+Otherwise
+
+↓
+
+Prompt the user to choose a Space.
+
+Quick Capture should require less than five seconds.
+
+# 24. Timeline
+
+Every Space contains a Timeline.
+
+The Timeline is generated automatically from user activity.
+
+Users cannot manually create Timeline entries.
+
+Timeline Events
+
+* Space Created
+* Artifact Created
+* Artifact Updated
+* Artifact Archived
+* Goal Completed
+* Media Uploaded
+* Relationship Added
+* Resource Saved
+* Bug Resolved
+
+Views
+
+Chronological
+
+Grouped by Day
+
+Grouped by Week
+
+Grouped by Month
+
+Filtering
+
+Artifact Type
+
+Date
+
+Tags
+
+Author (Future)
+
+Clicking any Timeline entry opens the corresponding Artifact.
+
+---
+
+# 25. Knowledge Graph
+
+Every Space contains an interactive Knowledge Graph.
+
+Purpose
+
+Visualize relationships between Artifacts.
+
+Node Types
+
+Knowledge
+
+Snippet
+
+Bug
+
+Resource
+
+Media
+
+Goal
+
+Idea
+
+Task
+
+Relationship Types
+
+Related
+
+Uses
+
+Depends On
+
+Inspired By
+
+References
+
+Parent
+
+Child
+
+User Actions
+
+Zoom
+
+Pan
+
+Expand
+
+Collapse
+
+Search
+
+Filter
+
+Click Node
+
+Open Artifact
+
+The graph is an alternative navigation system.
+
+It should never become the primary editing interface.
+
+---
+
+# 26. Goals View
+
+Displays all Goals belonging to the current Space.
+
+Each Goal displays
+
+Title
+
+Progress
+
+Milestones
+
+Target Date
+
+Status
+
+Related Artifacts
+
+Views
+
+List
+
+Board
+
+Timeline
+
+Goals should always remain connected to Artifacts rather than existing independently.
+
+---
+
+# 27. Settings
+
+Settings are divided into categories.
+
+General
+
+Appearance
+
+Editor
+
+Search
+
+Storage (BYOS)
+
+Synchronization
+
+AI
+
+Keyboard Shortcuts
+
+Import / Export
+
+Backup
+
+About
+
+Users should never need more than three clicks to reach any setting.
+
+---
+
+# 28. BYOS Setup Screen
+
+Purpose
+
+Allow users to configure where their Universe is stored.
+
+Layout
+
+```text
+Storage Provider
+
+○ Local Device
+○ Google Drive
+○ Dropbox
+○ OneDrive
+
+Status
+
+Connected
+
+Last Sync
+
+Storage Used
+
+Sync Queue
+
+Actions
+
+Connect
+
+Disconnect
+
+Sync Now
+
+Create Backup
+
+Restore Backup
+```
+
+The interface should explain that Constella stores data locally first and uses the selected provider only for synchronization and backup.
+
+---
+
+# 29. Synchronization Screen
+
+Displays
+
+Current Provider
+
+Last Successful Sync
+
+Pending Sync Jobs
+
+Failed Sync Jobs
+
+Conflict Count
+
+Recent Synchronization History
+
+Actions
+
+Sync Now
+
+Retry Failed Jobs
+
+Pause Sync
+
+Resume Sync
+
+Open Backup Folder
+
+Users should never need to manually upload or download files.
+
+---
+
+# 30. Backup Screen
+
+Displays
+
+Automatic Backup Schedule
+
+Recent Backups
+
+Backup Size
+
+Storage Location
+
+Actions
+
+Create Backup
+
+Restore Backup
+
+Delete Backup
+
+Export Backup
+
+Backups must be independent of synchronization.
+
+---
+
+# 31. Import / Export Screen
+
+Supported Imports
+
+Markdown
+
+JSON
+
+Images
+
+PDF
+
+ZIP
+
+Future
+
+Notion Export
+
+Obsidian Vault
+
+Evernote Export
+
+Supported Exports
+
+Markdown
+
+PDF
+
+JSON
+
+ZIP
+
+Complete Universe Backup
+
+Relationships should be preserved whenever possible.
+
+---
+
+# 32. Mobile Layout
+
+Bottom Navigation
+
+```text
+Home
+
+Search
+
+Capture
+
+Spaces
+
+Settings
+```
+
+The mobile application prioritizes
+
+Quick Capture
+
+Reading
+
+Searching
+
+Reviewing
+
+Editing small Artifacts
+
+Large editing sessions are expected on desktop.
+
+---
+
+# 33. Responsive Behavior
+
+Desktop
+
+Three-panel layout.
+
+Tablet
+
+Two-panel layout.
+
+Mobile
+
+Single-panel layout.
+
+The underlying functionality remains identical across devices.
+
+Only the layout changes.
+
+---
+
+# 34. Keyboard Shortcuts
+
+Global
+
+Ctrl + K
+
+Global Search
+
+Ctrl + N
+
+Quick Capture
+
+Ctrl + Shift + N
+
+Create Space
+
+Ctrl + ,
+
+Settings
+
+Ctrl + /
+
+Show Shortcuts
+
+Editor
+
+Ctrl + B
+
+Bold
+
+Ctrl + I
+
+Italic
+
+Ctrl + Shift + C
+
+Code Block
+
+Ctrl + Z
+
+Undo
+
+Ctrl + Shift + Z
+
+Redo
+
+Ctrl + D
+
+Duplicate Block
+
+Shortcuts should be customizable in future versions.
+
+---
+
+# 35. Drag & Drop Behavior
+
+Supported Operations
+
+Reorder Blocks
+
+Move Artifacts
+
+Reorder Dashboard Widgets
+
+Upload Files
+
+Drag Images into Editor
+
+Drop Files into Space
+
+Every drag operation should provide visual feedback before completion.
+
+---
+
+# 36. Empty States
+
+Every screen should provide helpful empty states.
+
+Example
+
+No Spaces
+
+"Create your first Space."
+
+No Artifacts
+
+"Start capturing knowledge."
+
+No Search Results
+
+"No matching content found."
+
+No Timeline
+
+"Your journey will appear here."
+
+No generic blank screens.
+
+---
+
+# 37. Loading States
+
+Use skeleton loaders.
+
+Avoid blocking the interface.
+
+Search results should appear progressively.
+
+Large media should lazy-load.
+
+Background synchronization should never freeze the UI.
+
+---
+
+# 38. Notifications
+
+Notification Types
+
+Success
+
+Warning
+
+Error
+
+Information
+
+Events
+
+Sync Complete
+
+Sync Failed
+
+Backup Created
+
+Backup Restored
+
+Conflict Detected
+
+Storage Connected
+
+AI Finished
+
+Notifications disappear automatically except for errors requiring user action.
+
+---
+
+# 39. Accessibility
+
+Minimum Requirements
+
+Keyboard Navigation
+
+Focus Indicators
+
+Screen Reader Labels
+
+High Contrast Support
+
+Scalable Text
+
+Accessible Color Contrast
+
+The application should remain usable without a mouse.
+
+---
+
+# 40. Interaction Rules
+
+Every interaction in Constella follows these rules.
+
+1. Every change saves automatically.
+
+2. The interface never blocks while synchronizing.
+
+3. Every object is searchable.
+
+4. Every Artifact opens in the same editor.
+
+5. Every Space has the same navigation structure.
+
+6. Every dialog can be closed using the keyboard.
+
+7. Context menus remain consistent throughout the application.
+
+8. Search is always one shortcut away.
+
+9. The user should never manually organize files or folders.
+
+10. Cloud availability must never affect normal editing.
+
+---
+
+# 41. Visual Design System
+
+Design Style
+
+Minimal
+
+Professional
+
+Modern
+
+Calm
+
+The application should emphasize content over decoration.
+
+Use whitespace generously.
+
+Avoid unnecessary gradients, glassmorphism or heavy animations.
+
+Primary focus should always remain on the current Space and its knowledge.
+
+---
+
+# 42. Iconography
+
+Use a single icon system throughout the application.
+
+Recommended
+
+Lucide Icons
+
+Every Artifact Type should have a consistent icon.
+
+Knowledge
+
+Book
+
+Snippet
+
+Code
+
+Bug
+
+Bug
+
+Resource
+
+Link
+
+Media
+
+Image
+
+Idea
+
+Lightbulb
+
+Goal
+
+Target
+
+Task
+
+Check Square
+
+Bookmark
+
+Bookmark
+
+Document
+
+File
+
+Voice Note
+
+Mic
+
+Icons should reinforce recognition without overwhelming the interface.
+
+---
+
+# 43. Theme Support
+
+Built-in Themes
+
+Light
+
+Dark
+
+System
+
+Future versions may support custom themes.
+
+Theme changes should apply instantly without restarting the application.
+
+---
+
+# 44. UI Principles
+
+Every screen, component and interaction in Constella must satisfy these principles.
+
+* Minimize clicks.
+* Prioritize Spaces over files.
+* Keep search always accessible.
+* Display context without clutter.
+* Maintain consistent layouts.
+* Make every action predictable.
+* Never block the user during synchronization.
+* Keep the interface responsive regardless of storage provider.
+* Preserve user focus while editing.
+* Let the content be the primary visual element.
+
+---
+
+# UI Architecture Summary
+
+The UI is centered around one concept:
+
+**Everything begins with a Space.**
+
+Users do not navigate through modules or file types.
+
+They enter a Space and perform every action—learning, capturing, searching, editing, reviewing and planning—within that Space.
+
+The interface is intentionally minimal, search-driven and local-first.
+
+Every design decision should reduce friction, preserve focus and encourage continuous growth of the user's personal knowledge universe.

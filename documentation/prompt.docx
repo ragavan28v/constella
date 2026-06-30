@@ -1,0 +1,816 @@
+# CONSTELLA — AI Development Prompt
+**React + TypeScript · Light-First Theme · Phase 1 MVP**
+
+---
+
+## 1. Project Overview
+
+Build **Constella**, a Local-First, Space-Based Personal Knowledge Operating System.
+
+Constella is not a notes app. It is a knowledge OS where every piece of information belongs to a **Space** (React, SpendMap, Dream House, Fitness, etc.). Users never manually organize files or folders. They enter a Space, capture Artifacts, write Blocks, and let the system handle everything else.
+
+The UI philosophy is: **calm workspace, not productivity dashboard**. Content is the hero. Chrome is minimal. Whitespace is generous.
+
+---
+
+## 2. Tech Stack (Exact)
+
+| Layer | Technology |
+|---|---|
+| Framework | React 18 + TypeScript |
+| Build Tool | Vite |
+| Routing | React Router v6 |
+| Styling | Tailwind CSS v3 |
+| Component Library | shadcn/ui |
+| State Management | Zustand |
+| Local Database | IndexedDB via Dexie.js |
+| Block Editor | TipTap v2 |
+| Knowledge Graph | React Flow |
+| Search | FlexSearch |
+| Charts | Recharts |
+| Forms | React Hook Form + Zod |
+| Icons | Lucide React |
+| Animations | Framer Motion (subtle, minimal) |
+| Date Handling | date-fns |
+
+> **Note:** This is the web MVP. No Tauri/Electron yet. All persistence goes through Dexie.js (IndexedDB). Cloud sync is **out of scope for Phase 1**.
+
+---
+
+## 3. Color Schema — Light Theme (Primary)
+
+### Base Palette
+
+```css
+/* Backgrounds */
+--bg-app:        #F8F7F4   /* Warm off-white — main canvas */
+--bg-surface:    #FFFFFF   /* Cards, panels, editor surface */
+--bg-sidebar:    #F2F1EE   /* Sidebar background */
+--bg-hover:      #EEECEA   /* Hover state on list items */
+--bg-selected:   #E8E4FF   /* Selected item / active nav */
+--bg-subtle:     #F5F4F1   /* Empty states, code blocks */
+
+/* Borders */
+--border:        #E4E2DD   /* Default border */
+--border-strong: #D0CEC9   /* Dividers, section separators */
+
+/* Text */
+--text-primary:  #1A1917   /* Headings, labels */
+--text-secondary:#6B6966   /* Meta, subtitles, placeholders */
+--text-tertiary: #A09D99   /* Timestamps, disabled */
+--text-inverse:  #FFFFFF
+
+/* Brand / Accent — Deep Indigo */
+--accent:        #5B4EE8   /* Primary buttons, active links */
+--accent-hover:  #4A3ED6
+--accent-light:  #EEE9FF   /* Tag backgrounds, badge fills */
+--accent-text:   #3D30C4   /* Accent text on light bg */
+
+/* Semantic */
+--success:       #16A34A
+--success-light: #DCFCE7
+--warning:       #D97706
+--warning-light: #FEF3C7
+--error:         #DC2626
+--error-light:   #FEE2E2
+--info:          #2563EB
+--info-light:    #DBEAFE
+
+/* Artifact Type Colors (subtle tints) */
+--type-knowledge:#EEF2FF   /* Indigo tint */
+--type-snippet:  #F0FDF4   /* Green tint */
+--type-bug:      #FFF1F2   /* Rose tint */
+--type-idea:     #FFFBEB   /* Amber tint */
+--type-resource: #F0F9FF   /* Sky tint */
+--type-goal:     #FAF5FF   /* Violet tint */
+--type-task:     #F8FAFC   /* Slate tint */
+--type-bookmark: #FFF7ED   /* Orange tint */
+```
+
+### Dark Theme Override (secondary, system-triggered)
+```css
+--bg-app:        #111110
+--bg-surface:    #1C1B19
+--bg-sidebar:    #161614
+--text-primary:  #F5F4F0
+--text-secondary:#9C9994
+--border:        #2E2D2A
+--accent:        #7B6EF6
+```
+
+### Typography Scale
+```css
+--font-sans: 'Inter', system-ui, sans-serif;
+--font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+--text-xs:   0.75rem  / line-height: 1rem
+--text-sm:   0.875rem / line-height: 1.25rem
+--text-base: 1rem     / line-height: 1.5rem
+--text-lg:   1.125rem / line-height: 1.75rem
+--text-xl:   1.25rem  / line-height: 1.75rem
+--text-2xl:  1.5rem   / line-height: 2rem
+--text-3xl:  1.875rem / line-height: 2.25rem
+```
+
+### Radius & Spacing
+```
+--radius-sm:  4px
+--radius-md:  8px
+--radius-lg:  12px
+--radius-xl:  16px
+--radius-full: 9999px
+
+Spacing: follow Tailwind's default 4px base scale (p-1=4px, p-2=8px, p-4=16px, etc.)
+```
+
+---
+
+## 4. Application Layout (Desktop)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ TopBar                                                          │
+│ [Logo]  [─────── Global Search (Ctrl+K) ──────]  [+] [🔔] [👤] │
+├──────────┬──────────────────────────────────────┬───────────────┤
+│          │                                      │               │
+│ Sidebar  │        Workspace (Main Content)      │   Inspector   │
+│ 240px    │        flex-1, overflow-y-auto       │   280px       │
+│          │                                      │ (contextual)  │
+│          │                                      │               │
+├──────────┴──────────────────────────────────────┴───────────────┤
+│ StatusBar — AutoSave · Offline · Artifact Count · AI Status     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Panel rules:**
+- Sidebar is collapsible to 56px (icon-only mode)
+- Inspector slides in/out — only visible when an Artifact is open
+- StatusBar is always 32px tall, low-contrast
+- No floating permanent overlays
+- Panels are not resizable in Phase 1
+
+**Responsive breakpoints:**
+- `≥ 1280px` — three-panel layout
+- `768–1279px` — two-panel (Inspector hidden by default, togglable)
+- `< 768px` — single panel, bottom navigation
+
+---
+
+## 5. Core Data Models (Dexie.js Schema)
+
+```typescript
+// db.ts
+interface Space {
+  id: string;           // nanoid()
+  name: string;
+  description: string;
+  icon: string;         // emoji or lucide icon name
+  color: string;        // hex — space accent color
+  template: 'learning' | 'project' | 'research' | 'dream' | 'personal' | 'blank';
+  favorite: boolean;
+  archived: boolean;
+  progress: number;     // 0–100, user-defined
+  createdAt: number;    // timestamp
+  updatedAt: number;
+  settings: Record<string, unknown>;
+}
+
+interface Artifact {
+  id: string;
+  spaceId: string;
+  type: 'knowledge' | 'snippet' | 'bug' | 'idea' | 'resource' | 'media' | 'task' | 'goal' | 'bookmark' | 'document' | 'voice_note';
+  title: string;
+  description: string;
+  status: 'active' | 'done' | 'archived';
+  priority: 'low' | 'medium' | 'high' | null;
+  favorite: boolean;
+  archived: boolean;
+  tags: string[];
+  createdAt: number;
+  updatedAt: number;
+  metadata: Record<string, unknown>;
+}
+
+interface Block {
+  id: string;
+  artifactId: string;
+  type: string;
+  position: number;
+  content: unknown;    // TipTap JSON
+  metadata: Record<string, unknown>;
+}
+
+interface Relationship {
+  id: string;
+  sourceArtifactId: string;
+  targetArtifactId: string;
+  relationshipType: 'related' | 'depends_on' | 'inspired_by' | 'uses' | 'references' | 'parent' | 'child';
+  createdAt: number;
+}
+
+interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
+
+interface TimelineEvent {
+  id: string;
+  spaceId: string;
+  event: 'space_created' | 'artifact_created' | 'artifact_updated' | 'artifact_archived' | 'goal_completed' | 'relationship_added';
+  entityId: string;
+  entityType: 'space' | 'artifact';
+  timestamp: number;
+}
+```
+
+---
+
+## 6. Zustand Store Structure
+
+```typescript
+// Separate stores, no cross-store direct mutation
+
+useUniverseStore   // global stats, settings
+useSpaceStore      // spaces[], activeSpaceId, CRUD
+useArtifactStore   // artifacts[], activeArtifactId, CRUD
+useSearchStore     // query, results, isSearchOpen
+useUIStore         // sidebarCollapsed, inspectorOpen, activeView, theme
+useEditorStore     // editorContent, isSaving, lastSaved
+```
+
+---
+
+## 7. Screen Flows
+
+### 7.1 App Initialization Flow
+```
+App mounts
+  → Check Dexie DB (create if first run)
+  → Load Universe (spaces, settings)
+  → If no spaces → redirect to /welcome (onboarding)
+  → If spaces exist → redirect to /home
+```
+
+### 7.2 Onboarding Flow (first launch)
+```
+/welcome
+  ├── Greeting screen: "Welcome to Constella"
+  │    Subtext: "Your personal knowledge universe"
+  │    CTA: "Create your first Space →"
+  │
+  └── Space creation modal:
+       - Name input (required)
+       - Template selector (6 tiles: Learning, Project, Research, Dream, Personal, Blank)
+       - Icon picker (emoji or category icons)
+       - Color picker (8 preset Space accent colors)
+       - CTA: "Create Space"
+       → Redirect to /spaces/:id
+```
+
+### 7.3 Home Screen Flow (`/home`)
+```
+/home
+  ├── Section: "Continue Working" — last 3 opened Artifacts (mini cards)
+  ├── Section: "Pinned Spaces" — SpaceCard grid (max 6, 3 per row)
+  ├── Section: "Recent Spaces" — SpaceCard list (last 8)
+  ├── Section: "Recent Activity" — Timeline feed (last 20 events)
+  └── Section: "Quick Stats" — Total spaces, total artifacts, streak
+
+Clicking a SpaceCard → /spaces/:id
+Clicking an Artifact mini card → /spaces/:spaceId/artifacts/:id
+```
+
+### 7.4 Space Screen Flow (`/spaces/:id`)
+```
+/spaces/:id
+  ├── SpaceHeader (always visible)
+  │    - Icon, Name, Description, Progress bar, Artifact count
+  │    - Favorite button, Settings button
+  │
+  ├── Tab Navigation: [Dashboard] [Artifacts] [Timeline] [Graph] [Goals]
+  │
+  ├── Dashboard (default tab)
+  │    Widget grid: Progress · Continue Working · Pinned Artifacts
+  │                 Recent Activity · Goals · AI Suggestions
+  │
+  ├── Artifacts tab → ArtifactExplorer
+  │    View toggle: [Grid] [List] [Timeline] [Kanban]
+  │    Filters: Type · Status · Tags · Priority · Date
+  │    Sort: Updated · Created · Alpha · Favorites
+  │
+  ├── Timeline tab → chronological activity log
+  ├── Graph tab → React Flow knowledge graph (nodes = artifacts)
+  └── Goals tab → goal list/board
+
+Clicking any ArtifactCard → opens ArtifactEditor in Workspace
+Inspector panel slides in with metadata
+```
+
+### 7.5 Artifact Editor Flow
+```
+Click ArtifactCard
+  → ArtifactEditor opens in Workspace (replaces ArtifactExplorer)
+  → Inspector slides in on the right
+
+ArtifactEditor layout (top to bottom):
+  - Artifact type badge + back button
+  - Title (large, editable h1)
+  - Description (subtitle, editable)
+  - Tag chips + "Add tag" button
+  - Divider
+  - TipTap BlockEditor (full width, unlimited height)
+  - Divider
+  - Section: Relationships (linked artifacts)
+  - Section: Attachments
+  - Section: Version History (future)
+
+Auto-save triggers on:
+  - 500ms debounce after typing stops
+  - Tab switch
+  - Space navigation
+  - App blur
+
+No Save button. Show "Saved" in StatusBar.
+```
+
+### 7.6 Global Search Flow (`Ctrl + K`)
+```
+Ctrl+K → Search modal opens (full-width overlay, centered, max-w-2xl)
+  Input focused immediately
+  Typing → FlexSearch queries local index → results appear instantly
+
+Results grouped:
+  [Spaces]    — space icon + name
+  [Artifacts] — type icon + title + space name
+  [Tags]      — tag chip
+
+Arrow keys to navigate, Enter to open, Esc to close
+No results state: "Nothing found. Try different keywords."
+```
+
+### 7.7 Quick Capture Flow
+```
+Ctrl+N or "+" button in TopBar
+  → QuickCapture modal (compact, max-w-lg)
+
+  Form fields:
+    - Type selector: [Knowledge] [Snippet] [Bug] [Idea] [Bookmark] [Task] [Goal]
+    - Title input (required, auto-focus)
+    - Body textarea (optional, expandable)
+    - Space selector:
+        If a Space is already active → pre-selected, changeable
+        If on Home → required, dropdown with space list
+
+  CTA: "Capture" (primary button)
+  Side CTA: "Capture & Open" (opens full editor after saving)
+
+Must complete in < 5 seconds for a simple capture.
+```
+
+---
+
+## 8. Component Breakdown
+
+### Layout Components
+```
+AppLayout           — top-level layout shell
+TopBar              — logo, search, quick capture, notifications, profile
+Sidebar             — space navigation, collapsible
+  SidebarSection    — labeled group (Pinned, Recent, Views, etc.)
+  SidebarItem       — nav item with icon, label, active state
+Workspace           — main content area (flex-1)
+Inspector           — right panel, slides in/out
+StatusBar           — bottom bar (fixed 32px)
+ResizablePanel      — (future, Phase 2)
+```
+
+### Shared UI Components (all from shadcn/ui + custom)
+```
+Button              — primary, secondary, ghost, destructive
+Input, Textarea, Select
+Badge               — for tags, artifact types, statuses
+Avatar              — user avatar circle
+Tooltip             — on hover for icon-only actions
+Toast               — success/error/info notifications (top-right)
+Dialog / Sheet      — for modals and side drawers
+ContextMenu         — right-click on SpaceCard, ArtifactCard
+DropdownMenu        — profile menu, filter dropdowns
+ProgressBar         — Space progress indicator
+Skeleton            — loading placeholders
+EmptyState          — icon + heading + CTA for empty views
+```
+
+### Feature Components
+```
+SpaceCard           — card with icon, name, progress, artifact count, hover actions
+SpaceHeader         — top section of a Space (icon, name, desc, progress, meta)
+SpaceCreationModal  — onboarding + new space dialog
+
+ArtifactCard        — grid/list item with type icon, title, tags, date
+ArtifactEditor      — full editing view (title + TipTap + meta)
+ArtifactExplorer    — grid/list/timeline/kanban view with filters
+
+BlockEditor         — TipTap instance with custom block extensions
+  HeadingBlock, ParagraphBlock, CodeBlock, ImageBlock
+  ChecklistBlock, QuoteBlock, CalloutBlock, DividerBlock
+  TableBlock, MermaidBlock, MathBlock
+
+QuickCapture        — global capture modal
+GlobalSearch        — Ctrl+K search overlay
+KnowledgeGraph      — React Flow canvas (Space Graph tab)
+TimelineFeed        — chronological activity log
+GoalsView           — goal list / board view
+DashboardGrid       — widget grid for Space dashboard
+  Widget: Progress, RecentArtifacts, PinnedArtifacts, Goals, Timeline, AIHint
+InspectorPanel      — metadata sidebar (tags, relationships, history)
+```
+
+---
+
+## 9. UI Expectations & Behaviour Rules
+
+### Spacing & Layout
+- Sidebar items: 40px tall, px-3, gap-1
+- Cards: rounded-xl, p-4, subtle shadow (`shadow-sm`)
+- Section headings: text-xs uppercase tracking-wider text-tertiary, mb-2
+- Content max-width inside Workspace: max-w-3xl, mx-auto (for editor)
+- Grid spacing: gap-4 for cards
+
+### Interactive States
+- Hover: bg-hover transition-colors duration-150
+- Active/Selected: bg-selected + accent left border (2px)
+- Focus rings: ring-2 ring-accent/40 ring-offset-2
+- Disabled: opacity-50, cursor-not-allowed
+
+### Motion (Framer Motion — keep subtle)
+- Sidebar collapse: width transition 200ms ease
+- Inspector slide: x-axis, 250ms ease-out
+- Modal appear: scale 0.96 → 1.0, opacity 0 → 1, 180ms
+- Toast appear: slide-in from right, 200ms
+- Page transitions: none (instant, no full-page animation)
+
+### Auto-save UX
+- StatusBar shows "Saving…" → "Saved just now" → "Saved 2m ago"
+- No save button anywhere in the editor
+- If offline: "Changes saved locally"
+
+### Empty States
+- Every list/grid must have an EmptyState component
+- Always include: Icon (Lucide, 40px, text-tertiary) + Heading + Subtext + Primary CTA
+- Examples:
+  - No spaces: "Create your first Space" → "Create Space" button
+  - No artifacts: "Start capturing knowledge" → "New Artifact" button
+  - No search results: "Nothing found" → "Try different keywords"
+  - No goals: "Set your first goal" → "Add Goal" button
+
+### Loading States
+- Use Skeleton loaders (not spinners) for content areas
+- Skeleton cards should match the shape of the actual card
+- TopBar search: instant (no loader)
+- Artifact Editor: skeleton for content area while loading blocks
+
+### Context Menus (right-click)
+Both SpaceCard and ArtifactCard must respond to right-click:
+```
+SpaceCard context menu:
+  Open | Favorite | Pin | Rename | Archive | Delete
+
+ArtifactCard context menu:
+  Open | Duplicate | Move to Space | Favorite | Archive | Copy ID | Delete
+```
+
+### Notifications (Toast)
+- Position: top-right
+- Auto-dismiss: 4s for success/info, persist for error
+- Types: success (green), warning (amber), error (red), info (blue)
+- Keep messages under 60 characters
+
+---
+
+## 10. Sidebar Navigation Structure
+
+```
+[Logo] Constella            [collapse button]
+
+── Home
+
+── Pinned Spaces
+   📘 React
+   🏗 SpendMap
+
+── Recent Spaces
+   🤖 ML Research
+   🏠 Dream House
+
+──────────────────────
+
+── All Spaces
+
+── Views
+   📚 Learning
+   🚀 Projects
+   💭 Dreams
+   🔬 Research
+   👤 Personal
+
+──────────────────────
+
+── Favorites
+── Archive
+── Trash
+
+──────────────────────
+
+⚙ Settings
+☁ Storage
+```
+
+Collapsed mode (56px wide): icons only, Tooltip on hover to show name.
+
+---
+
+## 11. Artifact Type Reference
+
+| Type | Icon (Lucide) | Badge Color | Description |
+|---|---|---|---|
+| knowledge | `BookOpen` | Indigo | Concepts, notes, explanations |
+| snippet | `Code2` | Green | Reusable code pieces |
+| bug | `Bug` | Rose | Issues, problems, errors |
+| idea | `Lightbulb` | Amber | Raw ideas, concepts |
+| resource | `Link` | Sky | URLs, references, docs |
+| media | `Image` | Slate | Images, videos, files |
+| task | `CheckSquare` | Slate | To-do items |
+| goal | `Target` | Violet | Objectives, milestones |
+| bookmark | `Bookmark` | Orange | Saved content |
+| document | `FileText` | Neutral | Formal documents |
+| voice_note | `Mic` | Pink | Audio notes |
+
+Each ArtifactCard shows the type icon + a pill badge with the type name in its corresponding badge color.
+
+---
+
+## 12. Space Templates
+
+When a Space is created, the template sets the Dashboard widget layout and suggests artifact types:
+
+| Template | Default Widgets | Suggested Types |
+|---|---|---|
+| Learning | Progress, Continue Working, Goals, Timeline | Knowledge, Snippet, Resource, Bookmark |
+| Project | Goals, Pinned Artifacts, Recent Bugs, Timeline | Task, Bug, Document, Snippet |
+| Research | Pinned Artifacts, Knowledge Graph, Timeline | Knowledge, Resource, Idea, Bookmark |
+| Dream | Goals, Media, Timeline, AI Suggestions | Idea, Media, Goal, Document |
+| Personal | Continue Working, Timeline, Goals | Task, Goal, Document, Voice Note |
+| Blank | Recent Artifacts, Timeline | All types equally |
+
+---
+
+## 13. TipTap Block Editor Setup
+
+Configure TipTap with these extensions (minimum for Phase 1):
+
+```typescript
+extensions: [
+  StarterKit,          // paragraph, heading (h1-h3), bold, italic, strike, code, blockquote, lists
+  Underline,
+  CodeBlockLowlight,   // with lowlight syntax highlighting
+  Image,
+  Table, TableRow, TableHeader, TableCell,
+  TaskList, TaskItem,  // for checklist
+  Placeholder.configure({ placeholder: 'Start writing…' }),
+  CharacterCount,
+]
+```
+
+**Editor visual styling:**
+- Font: var(--font-sans), text-base, leading-relaxed
+- No editor border or box-shadow — full-width, seamless
+- Headings: h1 text-2xl font-semibold, h2 text-xl font-medium, h3 text-lg
+- Code blocks: bg-subtle, font-mono, text-sm, rounded-lg, p-4
+- Blockquotes: border-l-4 border-accent-light pl-4 italic text-secondary
+- Task items: custom checkbox using Tailwind + Lucide Check icon
+- On `Cmd/Ctrl + /` → show slash command palette (block type picker)
+
+**Slash Commands (type `/` to trigger):**
+```
+/heading1  /heading2  /heading3
+/paragraph /bullet /numbered /checklist
+/code /quote /callout /divider
+/image /table
+```
+
+---
+
+## 14. Knowledge Graph (React Flow)
+
+- Nodes: one per Artifact in the current Space
+- Node size based on relationship count (more connections = slightly larger)
+- Node color: matches artifact type color
+- Edges: labeled with relationship type
+- Controls: zoom in/out, fit view, minimap
+- Click a node → opens that Artifact in the editor
+- Hover a node → show tooltip with title + type + relationship count
+- Default layout: Force-directed (dagre or elk layout)
+- Background: dotted grid pattern (React Flow default, subtle)
+
+---
+
+## 15. Keyboard Shortcuts
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+K` | Open Global Search |
+| `Ctrl+N` | Quick Capture |
+| `Ctrl+Shift+N` | Create New Space |
+| `Ctrl+,` | Open Settings |
+| `Ctrl+/` | Show Shortcut Reference |
+| `Ctrl+B` | Bold (in editor) |
+| `Ctrl+I` | Italic (in editor) |
+| `Ctrl+Shift+C` | Code Block (in editor) |
+| `Ctrl+Z` / `Ctrl+Shift+Z` | Undo / Redo |
+| `Esc` | Close modal / Inspector |
+| `↑↓` | Navigate search results |
+
+---
+
+## 16. Routing Structure
+
+```
+/                     → redirect to /home (if onboarded) or /welcome
+/welcome              → Onboarding (first launch)
+/home                 → Home screen
+/spaces               → All Spaces list
+/spaces/new           → Create Space (modal route or page)
+/spaces/:id           → Space screen (Dashboard tab by default)
+/spaces/:id/artifacts → Artifact Explorer tab
+/spaces/:id/timeline  → Timeline tab
+/spaces/:id/graph     → Knowledge Graph tab
+/spaces/:id/goals     → Goals tab
+/spaces/:id/artifacts/:artifactId  → Artifact Editor
+/settings             → Settings (General, Appearance, Editor, Storage, Shortcuts)
+/archive              → Archived Spaces and Artifacts
+/trash                → Deleted items
+```
+
+---
+
+## 17. Project Folder Structure
+
+```
+src/
+├── app/
+│   ├── App.tsx
+│   ├── router.tsx
+│   └── providers.tsx
+
+├── components/
+│   ├── layout/
+│   │   ├── AppLayout.tsx
+│   │   ├── TopBar.tsx
+│   │   ├── Sidebar.tsx
+│   │   ├── Workspace.tsx
+│   │   ├── Inspector.tsx
+│   │   └── StatusBar.tsx
+│   │
+│   ├── shared/
+│   │   ├── Button.tsx
+│   │   ├── Badge.tsx
+│   │   ├── EmptyState.tsx
+│   │   ├── Skeleton.tsx
+│   │   ├── Toast.tsx
+│   │   └── ... (other shadcn/ui wrappers)
+│   │
+│   ├── spaces/
+│   │   ├── SpaceCard.tsx
+│   │   ├── SpaceHeader.tsx
+│   │   ├── SpaceCreationModal.tsx
+│   │   └── SpaceGrid.tsx
+│   │
+│   ├── artifacts/
+│   │   ├── ArtifactCard.tsx
+│   │   ├── ArtifactEditor.tsx
+│   │   ├── ArtifactExplorer.tsx
+│   │   └── ArtifactTypeIcon.tsx
+│   │
+│   ├── editor/
+│   │   ├── BlockEditor.tsx
+│   │   ├── SlashCommands.tsx
+│   │   └── extensions/
+│   │
+│   ├── search/
+│   │   └── GlobalSearch.tsx
+│   │
+│   ├── capture/
+│   │   └── QuickCapture.tsx
+│   │
+│   ├── graph/
+│   │   └── KnowledgeGraph.tsx
+│   │
+│   ├── timeline/
+│   │   └── TimelineFeed.tsx
+│   │
+│   ├── dashboard/
+│   │   ├── DashboardGrid.tsx
+│   │   └── widgets/
+│   │
+│   └── inspector/
+│       └── InspectorPanel.tsx
+
+├── stores/
+│   ├── universeStore.ts
+│   ├── spaceStore.ts
+│   ├── artifactStore.ts
+│   ├── searchStore.ts
+│   └── uiStore.ts
+
+├── db/
+│   ├── database.ts     (Dexie setup)
+│   └── repositories/
+│       ├── spaceRepository.ts
+│       ├── artifactRepository.ts
+│       ├── blockRepository.ts
+│       ├── relationshipRepository.ts
+│       └── timelineRepository.ts
+
+├── search/
+│   └── searchIndex.ts  (FlexSearch setup + indexing)
+
+├── pages/
+│   ├── WelcomePage.tsx
+│   ├── HomePage.tsx
+│   ├── SpacePage.tsx
+│   ├── SettingsPage.tsx
+│   └── ArchivePage.tsx
+
+├── hooks/
+│   ├── useAutoSave.ts
+│   ├── useSearch.ts
+│   ├── useKeyboardShortcut.ts
+│   └── useTheme.ts
+
+├── types/
+│   └── index.ts        (Space, Artifact, Block, etc. interfaces)
+
+├── utils/
+│   ├── id.ts           (nanoid)
+│   ├── date.ts         (date-fns helpers)
+│   └── artifact.ts     (type → icon/color mappings)
+
+└── styles/
+    ├── globals.css     (CSS variables, Tailwind base)
+    └── editor.css      (TipTap editor overrides)
+```
+
+---
+
+## 18. Implementation Order (Phase 1)
+
+Build in this order to get a working foundation fast:
+
+1. **DB Setup** — Dexie schema, repositories for Space + Artifact + Block
+2. **Layout Shell** — AppLayout, TopBar (static), Sidebar (static), StatusBar
+3. **Routing** — React Router setup, all routes defined
+4. **Welcome/Onboarding** — SpaceCreationModal, template selection
+5. **Home Screen** — SpaceCard, recent spaces grid, pinned spaces
+6. **Space Screen** — SpaceHeader, tab navigation (shell only)
+7. **ArtifactExplorer** — Grid view + ArtifactCard + filters
+8. **ArtifactEditor** — TipTap integration, auto-save, Inspector panel
+9. **Quick Capture** — Global modal, Ctrl+N shortcut
+10. **Global Search** — Ctrl+K modal, FlexSearch indexing
+11. **Timeline** — auto-generated from DB events
+12. **Knowledge Graph** — React Flow basic nodes + edges
+13. **Dashboard Widgets** — Progress, Recent, Pinned, Goals shell
+14. **Sidebar** — full navigation with collapse, context menus
+15. **Settings** — Appearance (theme toggle), Editor prefs, Shortcuts list
+
+---
+
+## 19. Core Constraints
+
+- **No cloud sync in Phase 1.** All data stays in IndexedDB. Show a "Local only" badge in StatusBar.
+- **No authentication in Phase 1.** Single-user, no login.
+- **No AI in Phase 1.** The AI Suggestions widget renders static placeholder cards.
+- **No file attachments in Phase 1.** Images can be pasted into TipTap via base64 only.
+- **Auto-save is non-negotiable.** There must be zero Save buttons.
+- **Search must be offline-first.** FlexSearch index must be populated on every artifact write.
+- **Every empty list must show an EmptyState.** Never show a bare blank div.
+- **Light theme is default.** Dark theme is toggled manually via Settings or system preference.
+- **No feature flags, no A/B testing, no analytics.** Keep it clean.
+
+---
+
+## 20. Design Don'ts
+
+- No glassmorphism
+- No heavy gradients (subtle linear gradients only for Space cover colors)
+- No excessive drop shadows (shadow-sm maximum)
+- No animations over 300ms
+- No full-page loading spinners (skeleton loaders only)
+- No floating panels that don't belong to the five permanent regions
+- No modals that cannot be closed with Escape
+- No placeholder buttons that do nothing without a TODO comment
+
+---
+
+*End of Constella Development Prompt — v1.0*
+*Covers: Phase 1 MVP · React + TypeScript · Light-First Theme · Local-First · No Auth · No Cloud*
