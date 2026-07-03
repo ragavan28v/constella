@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light Theme Variables */
+  --bg-app: #F8F7F4;
+  --bg-surface: #FFFFFF;
+  --bg-sidebar: #F2F1EE;
+  --bg-hover: #EEECEA;
+  --bg-selected: #E8E4FF;
+  --bg-subtle: #F5F4F1;
+
+  --border: #E4E2DD;
+  --border-strong: #D0CEC9;
+
+  --text-primary: #1A1917;
+  --text-secondary: #6B6966;
+  --text-tertiary: #A09D99;
+  --text-inverse: #FFFFFF;
+
+  --accent: #5B4EE8;
+  --accent-hover: #4A3ED6;
+  --accent-light: #EEE9FF;
+  --accent-text: #3D30C4;
+
+  --success: #16A34A;
+  --success-light: #DCFCE7;
+  --warning: #D97706;
+  --warning-light: #FEF3C7;
+  --error: #DC2626;
+  --error-light: #FEE2E2;
+  --info: #2563EB;
+  --info-light: #DBEAFE;
+
+  --type-knowledge: #EEF2FF;
+  --type-snippet: #F0FDF4;
+  --type-bug: #FFF1F2;
+  --type-idea: #FFFBEB;
+  --type-resource: #F0F9FF;
+  --type-goal: #FAF5FF;
+  --type-task: #F8FAFC;
+  --type-bookmark: #FFF7ED;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.dark {
+  /* Dark Theme Variables */
+  --bg-app: #111110;
+  --bg-surface: #1C1B19;
+  --bg-sidebar: #161614;
+  --bg-hover: #2B2A27;
+  --bg-selected: #2D2A4A;
+  --bg-subtle: #242321;
+
+  --border: #2E2D2A;
+  --border-strong: #3F3E3A;
+
+  --text-primary: #F5F4F0;
+  --text-secondary: #9C9994;
+  --text-tertiary: #6E6C68;
+  --text-inverse: #111110;
+
+  --accent: #7B6EF6;
+  --accent-hover: #675AD8;
+  --accent-light: #241F47;
+  --accent-text: #B4AAFF;
+
+  --type-knowledge: #1B2240;
+  --type-snippet: #153321;
+  --type-bug: #3D1E22;
+  --type-idea: #382C18;
+  --type-resource: #182C3D;
+  --type-goal: #291F38;
+  --type-task: #22262B;
+  --type-bookmark: #3B2414;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
