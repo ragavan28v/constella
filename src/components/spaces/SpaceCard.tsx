@@ -47,20 +47,20 @@ export const SpaceCard: React.FC<SpaceCardProps> = ({ space }) => {
   return (
     <div 
       onClick={handleClick}
-      className="group relative bg-app-surface border border-border rounded-xl p-4 shadow-sm hover:shadow-md hover:border-border-strong cursor-pointer transition-all duration-150 flex flex-col justify-between h-40 select-none"
+      className="group relative bg-app-surface border border-border rounded-xl p-3 shadow-sm hover:shadow-md hover:border-border-strong cursor-pointer transition-all duration-150 flex flex-col justify-between h-32 select-none"
     >
       {/* Top Section */}
       <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <div 
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-2xl shadow-sm border border-black/5"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-xl shadow-sm border border-black/5"
             style={{ backgroundColor: space.color + '20' }} // Subtle background tint
           >
             {space.icon}
           </div>
           <div>
-            <h3 className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors truncate max-w-[140px]">{space.name}</h3>
-            <span className="text-[10px] uppercase font-semibold text-text-secondary tracking-wider">{space.template}</span>
+            <h3 className="text-xs font-bold text-text-primary group-hover:text-accent transition-colors truncate max-w-[150px]">{space.name}</h3>
+            <span className="text-[9px] uppercase font-semibold text-text-secondary tracking-wider">{space.template}</span>
           </div>
         </div>
 
@@ -68,21 +68,21 @@ export const SpaceCard: React.FC<SpaceCardProps> = ({ space }) => {
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button 
             onClick={handleFavorite}
-            className={`p-1 rounded hover:bg-app-hover border border-transparent transition-colors ${space.favorite ? 'text-amber-500' : 'text-text-tertiary'}`}
+            className={`p-0.5 rounded hover:bg-app-hover border border-transparent transition-colors ${space.favorite ? 'text-amber-500' : 'text-text-tertiary'}`}
             title={space.favorite ? 'Unfavorite' : 'Favorite'}
           >
-            <Star className="w-3.5 h-3.5 fill-current" />
+            <Star className="w-3 h-3 fill-current" />
           </button>
           <button 
             onClick={handleArchive}
-            className="p-1 rounded hover:bg-app-hover text-text-secondary border border-transparent transition-colors"
+            className="p-0.5 rounded hover:bg-app-hover text-text-secondary border border-transparent transition-colors"
             title="Archive Space"
           >
-            <Archive className="w-3.5 h-3.5" />
+            <Archive className="w-3 h-3" />
           </button>
           <button 
             onClick={handleDelete}
-            className="p-1 rounded hover:bg-app-hover text-error border border-transparent transition-colors"
+            className="p-0.5 rounded hover:bg-app-hover text-error border border-transparent transition-colors"
             title="Delete Space"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -91,17 +91,17 @@ export const SpaceCard: React.FC<SpaceCardProps> = ({ space }) => {
       </div>
 
       {/* Description */}
-      <p className="text-xs text-text-secondary line-clamp-2 mt-2 leading-relaxed flex-1">
+      <p className="text-[11px] text-text-secondary line-clamp-1 mt-1 leading-normal flex-1">
         {space.description || 'No description provided.'}
       </p>
 
       {/* Bottom Section: Progress & Counts */}
-      <div className="space-y-1.5 mt-2">
-        <div className="flex justify-between items-center text-[10px] text-text-secondary font-medium">
+      <div className="space-y-1 mt-1.5">
+        <div className="flex justify-between items-center text-[9px] text-text-secondary font-medium">
           <span>{artifactCount} Artifacts</span>
           <span>{space.progress}% Complete</span>
         </div>
-        <div className="w-full h-1.5 bg-app-bg rounded-full overflow-hidden">
+        <div className="w-full h-1 bg-app-bg rounded-full overflow-hidden">
           <div 
             className="h-full transition-all duration-300"
             style={{ 
