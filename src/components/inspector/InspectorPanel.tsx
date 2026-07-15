@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useArtifactStore } from '../../stores/artifactStore';
-import { relationshipRepository } from '../../db/repositories/relationshipRepository';
+import { getArtifactById, getArtifactsBySpaceId, getRelationshipsByArtifactId, createRelationship, deleteRelationship } from '../../services/cloudRepository';
 import type { Artifact, Relationship } from '../../types';
-import { db } from '../../db/database';
 import { Link2, Trash2 } from 'lucide-react';
 
 export const InspectorPanel: React.FC = () => {
@@ -25,24 +24,19 @@ export const InspectorPanel: React.FC = () => {
     }
 
     const loadInspectorData = async () => {
-      const artObj = await db.artifacts.get(activeArtifactId);
+      const artObj = await getArtifactById(activeArtifactId);
       if (artObj) {
         setArtifact(artObj);
 
-        // Fetch other artifacts in same space for links
-        const list = await db.artifacts
-          .where('spaceId')
-          .equals(artObj.spaceId)
-          .filter(a => a.id !== activeArtifactId && a.status !== 'archived')
-          .toArray();
+        const list = (await getArtifactsBySpaceId(artObj.spaceId)).filter(
+          a => a.id !== activeArtifactId && a.status !== 'archived'
+        );
         setSpaceArtifacts(list);
 
-        // Fetch links
-        const links = await relationshipRepository.getByArtifactId(activeArtifactId);
+        const links = await getRelationshipsByArtifactId(activeArtifactId);
         setRelationships(links);
 
-        // Resolve labels
-        const allArts = await db.artifacts.where('spaceId').equals(artObj.spaceId).toArray();
+        const allArts = await getArtifactsBySpaceId(artObj.spaceId);
         const aMap: Record<string, string> = {};
         allArts.forEach(a => { aMap[a.id] = a.title; });
         setAllArtifactNames(aMap);
@@ -77,19 +71,16 @@ export const InspectorPanel: React.FC = () => {
       createdAt: Date.now()
     };
 
-    await relationshipRepository.create(newLink);
-    
-    // Refresh links
-    const links = await relationshipRepository.getByArtifactId(artifact.id);
+    await createRelationship(newLink);
+    const links = await getRelationshipsByArtifactId(artifact.id);
     setRelationships(links);
     setTargetId('');
   };
 
   const handleDeleteLink = async (id: string) => {
-    await relationshipRepository.delete(id);
-    // Refresh links
+    await deleteRelationship(id);
     if (artifact) {
-      const links = await relationshipRepository.getByArtifactId(artifact.id);
+      const links = await getRelationshipsByArtifactId(artifact.id);
       setRelationships(links);
     }
   };

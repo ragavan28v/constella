@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { db } from '../db/database';
+import { cloudStorageEngine } from '../services/storage';
+import { getAllSpaces, getAllArtifacts, getRecentTimelineEvents } from '../services/cloudRepository';
 
 interface UniverseState {
   totalSpaces: number;
@@ -17,11 +18,18 @@ export const useUniverseStore = create<UniverseState>((set) => ({
   loadStats: async () => {
     set({ loading: true });
     try {
-      const totalSpaces = await db.spaces.count();
-      const totalArtifacts = await db.artifacts.count();
+      if (!cloudStorageEngine.isConnected()) {
+        set({ loading: false });
+        return;
+      }
+
+      const spaces = await getAllSpaces();
+      const artifacts = await getAllArtifacts();
+      const totalSpaces = spaces.length;
+      const totalArtifacts = artifacts.length;
       
       // Calculate streak based on timeline events
-      const events = await db.timelineEvents.orderBy('timestamp').toArray();
+      const events = await getRecentTimelineEvents();
       let streak = 0;
       if (events.length > 0) {
         // Simple day checking streak calculation:

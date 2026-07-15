@@ -1,18 +1,23 @@
 import React from 'react';
 import { AppLayout } from '../components/layout/AppLayout';
 import { useUIStore } from '../stores/uiStore';
-import { Sun, Moon, Keyboard, Database, AlertOctagon } from 'lucide-react';
-import { db } from '../db/database';
+import { useAuthStore } from '../stores/authStore';
+import { useNavigate } from 'react-router-dom';
+import { Sun, Moon, Keyboard, Database } from 'lucide-react';
+import { signOutUser } from '../services/firebase';
 
 export const SettingsPage: React.FC = () => {
   const { theme, setTheme } = useUIStore();
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
 
-  const handleResetDatabase = async () => {
-    if (confirm("WARNING: This will permanently delete all Spaces, Artifacts, Blocks, and Timeline History! Are you absolutely sure?")) {
-      await db.delete();
-      alert("Database reset. Reloading application...");
-      window.location.reload();
+  const handleSignOut = async () => {
+    if (!confirm('Sign out of your cloud session?')) {
+      return;
     }
+
+    await signOutUser();
+    navigate('/welcome');
   };
 
   const shortcuts = [
@@ -31,6 +36,26 @@ export const SettingsPage: React.FC = () => {
           <h1 className="text-xl font-bold text-text-primary">Settings</h1>
           <p className="text-xs text-text-secondary mt-0.5">Configure theme preferences and system properties.</p>
         </div>
+
+        {/* Account Settings Section */}
+        {user && (
+          <section className="bg-app-surface border border-border rounded-2xl p-5 shadow-sm space-y-4">
+            <h2 className="text-sm font-bold text-text-primary flex items-center gap-2 border-b border-border pb-2">
+              <Database className="w-4 h-4 text-text-secondary" />
+              <span>Cloud Account</span>
+            </h2>
+            <div className="text-sm text-text-primary">
+              <div className="font-semibold">{user.displayName || user.email}</div>
+              <div className="text-xs text-text-secondary">{user.email}</div>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="px-4 py-2 bg-error hover:bg-error/95 text-white text-xs font-bold rounded-lg shadow-sm"
+            >
+              Sign out
+            </button>
+          </section>
+        )}
 
         {/* Theme Settings Section */}
         <section className="bg-app-surface border border-border rounded-2xl p-5 shadow-sm space-y-4">
@@ -85,24 +110,13 @@ export const SettingsPage: React.FC = () => {
 
         {/* Storage Reset Section */}
         <section className="bg-app-surface border border-border rounded-2xl p-5 shadow-sm space-y-4">
-          <h2 className="text-sm font-bold text-error flex items-center gap-2 border-b border-border pb-2">
-            <Database className="w-4 h-4 text-error" />
+          <h2 className="text-sm font-bold text-text-primary flex items-center gap-2 border-b border-border pb-2">
+            <Database className="w-4 h-4 text-text-secondary" />
             <span>Storage Management</span>
           </h2>
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <h3 className="text-xs font-bold text-text-primary">Clear Local Database</h3>
-              <p className="text-[11px] text-text-secondary leading-normal max-w-md">
-                Deletes all IndexedDB tables. Make sure to back up your workspaces if you have important files stored locally.
-              </p>
-            </div>
-            <button
-              onClick={handleResetDatabase}
-              className="flex items-center gap-1.5 px-4 py-2 bg-error hover:bg-error/95 text-white text-xs font-bold rounded-lg shadow-sm"
-            >
-              <AlertOctagon className="w-4 h-4" />
-              <span>Purge All Data</span>
-            </button>
+          <div className="space-y-2 text-xs text-text-secondary">
+            <p>Constella is now cloud-first. There is no local IndexedDB workspace to clear.</p>
+            <p>If you want to remove your cloud session, sign out above and disconnect from your Google account.</p>
           </div>
         </section>
       </div>

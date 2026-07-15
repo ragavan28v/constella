@@ -8,7 +8,7 @@ import {
   useEdgesState
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { db } from '../../db/database';
+import { getAllArtifacts, getSpaceRelationships } from '../../services/cloudRepository';
 
 interface KnowledgeGraphProps {
   spaceId: string;
@@ -21,12 +21,8 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ spaceId, onOpenA
 
   useEffect(() => {
     const buildGraphData = async () => {
-      // Fetch artifacts in space
-      const artifacts = await db.artifacts.where('spaceId').equals(spaceId).toArray();
-      // Fetch relationships in space
-      const activeIds = new Set(artifacts.map(a => a.id));
-      const rels = await db.relationships.toArray();
-      const spaceRels = rels.filter(r => activeIds.has(r.sourceArtifactId) && activeIds.has(r.targetArtifactId));
+      const artifacts = (await getAllArtifacts()).filter(a => a.spaceId === spaceId);
+      const spaceRels = await getSpaceRelationships(spaceId);
 
       // Calculate node sizes based on connection counts
       const counts: Record<string, number> = {};

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { TimelineEvent } from '../../types';
-import { db } from '../../db/database';
+import { getTimelineEventsBySpaceId, getAllArtifacts } from '../../services/cloudRepository';
 import { format } from 'date-fns';
 import { Calendar, RefreshCw } from 'lucide-react';
 
@@ -15,16 +15,12 @@ export const TimelineFeed: React.FC<TimelineFeedProps> = ({ spaceId }) => {
 
   const fetchTimeline = async () => {
     setLoading(true);
-    const spaceEvents = await db.timelineEvents
-      .where('spaceId')
-      .equals(spaceId)
-      .reverse()
-      .sortBy('timestamp');
+    const spaceEvents = await getTimelineEventsBySpaceId(spaceId);
     setEvents(spaceEvents);
 
-    const allArts = await db.artifacts.where('spaceId').equals(spaceId).toArray();
+    const allArts = await getAllArtifacts();
     const aMap: Record<string, string> = {};
-    allArts.forEach(a => { aMap[a.id] = a.title; });
+    allArts.filter(a => a.spaceId === spaceId).forEach(a => { aMap[a.id] = a.title; });
     setArtifactNames(aMap);
     setLoading(false);
   };

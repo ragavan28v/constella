@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Space } from '../types';
 import { spaceRepository } from '../db/repositories/spaceRepository';
 import { useUniverseStore } from './universeStore';
+import { cloudStorageEngine } from '../services/storage';
 
 interface SpaceState {
   spaces: Space[];
@@ -19,6 +20,11 @@ export const useSpaceStore = create<SpaceState>((set, get) => ({
   activeSpaceId: null,
   loading: false,
   loadSpaces: async () => {
+    if (!cloudStorageEngine.isConnected()) {
+      set({ loading: false });
+      return;
+    }
+
     set({ loading: true });
     try {
       const spaces = await spaceRepository.getAll();

@@ -3,7 +3,8 @@ import { AppLayout } from '../components/layout/AppLayout';
 import { SpaceCard } from '../components/spaces/SpaceCard';
 import { useSpaceStore } from '../stores/spaceStore';
 import { useUniverseStore } from '../stores/universeStore';
-import { db } from '../db/database';
+import { cloudStorageEngine } from '../services/storage';
+import { getAllArtifacts, getAllSpaces, getRecentTimelineEvents } from '../services/cloudRepository';
 import type { Artifact, TimelineEvent } from '../types';
 import { BookOpen, Calendar, Clock, Star, Flame, LayoutGrid, Plus } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -26,6 +27,10 @@ export const HomePage: React.FC = () => {
   const [isActivityCollapsed, setIsActivityCollapsed] = useState(true);
 
   useEffect(() => {
+    if (!cloudStorageEngine.isConnected()) {
+      return;
+    }
+
     loadSpaces();
     loadStats();
   }, [loadSpaces, loadStats]);
@@ -33,30 +38,28 @@ export const HomePage: React.FC = () => {
   // Fetch recent artifacts and activity
   useEffect(() => {
     const fetchHomeData = async () => {
-      const recents = await db.artifacts
-        .where('archived')
-        .equals(0)
-        .reverse()
-        .sortBy('updatedAt');
-      setRecentArtifacts(recents.slice(0, 3));
+      if (!cloudStorageEngine.isConnected()) {
+        return;
+      }
 
-      const events = await db.timelineEvents
-        .orderBy('timestamp')
-        .reverse()
-        .limit(10)
-        .toArray();
-      setTimelineEvents(events);
+      const allSpaces = await getAllSpaces();
+      const allArtifacts = await getAllArtifacts();
+      const recent = allArtifacts
+        .filter((artifact) => !artifact.archived)
+        .sort((a, b) => b.updatedAt - a.updatedAt)
+        .slice(0, 3);
 
-      // Map IDs for labels
-      const allSpaces = await db.spaces.toArray();
+      const events = await getRecentTimelineEvents(10);
+      
       const sMap: Record<string, string> = {};
       allSpaces.forEach(s => { sMap[s.id] = s.name; });
       setSpaceNames(sMap);
 
-      const allArtifacts = await db.artifacts.toArray();
       const aMap: Record<string, string> = {};
       allArtifacts.forEach(a => { aMap[a.id] = a.title; });
       setArtifactNames(aMap);
+      setRecentArtifacts(recent);
+      setTimelineEvents(events);
     };
     fetchHomeData();
   }, [spaces]);

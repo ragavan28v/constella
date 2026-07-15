@@ -1,0 +1,992 @@
+# CONSTELLA — ONLINE BYOS STORAGE ARCHITECTURE AND AI DEVELOPMENT INSTRUCTION
+
+## 1. Core Storage Principle
+
+Constella must be built as a fully online, BYOS-first web application.
+
+The application must not use IndexedDB, SQLite, Firebase, Supabase, MongoDB, PostgreSQL, or any other centralized or local persistent database for storing user knowledge.
+
+All persistent user data must be stored directly inside the cloud storage provider selected by the user.
+
+Supported providers:
+
+* Google Drive
+* Microsoft OneDrive
+* Dropbox
+
+The selected BYOS provider is the permanent source of truth.
+
+The application itself acts only as:
+
+* User interface
+* Knowledge organization layer
+* Search layer
+* Editing layer
+* Relationship layer
+* AI assistance layer
+* Storage orchestration layer
+
+The application provider must not permanently store the user's personal knowledge on its own servers.
+
+---
+
+# 2. Core Architecture
+
+The complete data flow is:
+
+```text
+User
+    ↓
+Constella Web Application
+    ↓
+In-Memory Application State
+    ↓
+Repository Layer
+    ↓
+Storage Engine
+    ↓
+Active Storage Adapter
+    ↓
+Google Drive / OneDrive / Dropbox
+```
+
+The selected cloud provider is the persistent source of truth.
+
+The browser may temporarily hold data in memory while the application is open.
+
+Refreshing or closing the browser must not be required for saving data.
+
+Every important user change must eventually be persisted directly to the active BYOS provider.
+
+---
+
+# 3. Core Domain Model
+
+Constella follows this hierarchy:
+
+```text
+Universe
+    ↓
+Spaces
+    ↓
+Artifacts
+    ↓
+Blocks
+```
+
+A Universe represents the user's entire Constella environment.
+
+A Space represents one meaningful long-term topic.
+
+Examples:
+
+* React
+* Machine Learning
+* SpendMap
+* Dream House
+* UI Design
+* Startup
+* Fitness
+
+Artifacts are the meaningful content inside Spaces.
+
+Supported Artifact types include:
+
+* Knowledge
+* Code Snippet
+* Bug
+* Resource
+* Media
+* Idea
+* Goal
+* Task
+* Bookmark
+* Document
+* Voice Note
+
+Blocks are the editable content units inside Artifacts.
+
+Supported Blocks include:
+
+* Heading
+* Paragraph
+* Checklist
+* Bullet List
+* Numbered List
+* Code
+* Image
+* Gallery
+* Video
+* Audio
+* Table
+* Quote
+* Callout
+* Divider
+* Mathematics
+* Mermaid Diagram
+* Website Embed
+* PDF
+* File
+
+---
+
+# 4. BYOS as the Source of Truth
+
+Google Drive, OneDrive, or Dropbox must be the authoritative persistent storage system.
+
+The application must never require a separate application database to reconstruct the user's Universe.
+
+If a user signs into Constella on another browser or device and connects the same storage provider, the application must be capable of reconstructing the complete Universe from the files stored in that provider.
+
+This includes:
+
+* Spaces
+* Artifacts
+* Blocks
+* Tags
+* Relationships
+* Goals
+* Dashboard configuration
+* User settings
+* Media
+* Attachments
+* Storage metadata
+
+The BYOS provider must contain everything required to restore the user's Universe.
+
+---
+
+# 5. Provider-Independent Storage Engine
+
+Constella must never directly couple application features to Google Drive, OneDrive, or Dropbox.
+
+Implement this architecture:
+
+```text
+UI
+    ↓
+Application Services
+    ↓
+Repository Layer
+    ↓
+Storage Engine
+    ↓
+Storage Adapter Interface
+    ├── GoogleDriveAdapter
+    ├── OneDriveAdapter
+    └── DropboxAdapter
+```
+
+No UI component may directly call Google Drive API, Microsoft Graph API, or Dropbox API.
+
+No Artifact feature may contain provider-specific logic.
+
+All cloud operations must pass through the Storage Engine.
+
+---
+
+# 6. Storage Adapter Interface
+
+Define one common interface implemented by every provider.
+
+The interface must conceptually support:
+
+```text
+connect()
+
+disconnect()
+
+isConnected()
+
+getAccountInfo()
+
+createFolder()
+
+listFiles()
+
+uploadFile()
+
+downloadFile()
+
+updateFile()
+
+deleteFile()
+
+moveFile()
+
+getMetadata()
+
+getChanges()
+
+getStorageUsage()
+```
+
+Provider-specific differences must remain hidden inside individual adapters.
+
+The rest of the application must behave identically regardless of the selected provider.
+
+---
+
+# 7. Cloud Folder Structure
+
+Use the same logical structure across all providers:
+
+```text
+Constella/
+│
+├── manifest.json
+│
+├── universe.json
+│
+├── spaces/
+│   │
+│   ├── {space-id}/
+│   │   ├── space.json
+│   │   │
+│   │   ├── artifacts/
+│   │   │   ├── {artifact-id}.json
+│   │   │   └── ...
+│   │   │
+│   │   └── attachments/
+│   │       ├── {attachment-id}.png
+│   │       ├── {attachment-id}.pdf
+│   │       ├── {attachment-id}.mp3
+│   │       └── ...
+│   │
+│   └── ...
+│
+├── relationships/
+│   └── relationships.json
+│
+├── settings/
+│   └── settings.json
+│
+└── backups/
+```
+
+This structure must remain logically identical across Google Drive, OneDrive, and Dropbox.
+
+Provider-specific file IDs may differ, but Constella's domain model must not.
+
+---
+
+# 8. Manifest File
+
+The root `manifest.json` file acts as the entry point for reconstructing the Universe.
+
+Example structure:
+
+```json
+{
+  "schemaVersion": 1,
+  "universeId": "universe-uuid",
+  "universeName": "My Constella",
+  "createdAt": "2026-07-14T10:00:00Z",
+  "updatedAt": "2026-07-14T12:00:00Z",
+  "spaces": [
+    {
+      "id": "space-react-uuid",
+      "name": "React",
+      "path": "spaces/space-react-uuid/space.json",
+      "updatedAt": "2026-07-14T11:30:00Z"
+    }
+  ]
+}
+```
+
+The application should load this file first after connecting to a provider.
+
+It should then use the manifest to discover the rest of the Universe.
+
+---
+
+# 9. Space Storage
+
+Every Space receives its own directory.
+
+Example:
+
+```text
+spaces/
+    550e8400-e29b-41d4-a716-446655440000/
+        space.json
+        artifacts/
+        attachments/
+```
+
+The `space.json` file stores:
+
+* ID
+* Name
+* Description
+* Icon
+* Cover image reference
+* Template
+* Tags
+* Progress
+* Favorite state
+* Archive state
+* Dashboard configuration
+* Created date
+* Updated date
+
+The Space ID must be an immutable UUID.
+
+Never use the Space name as its identity.
+
+---
+
+# 10. Artifact Storage
+
+Every Artifact must be stored as an independent JSON document.
+
+Example:
+
+```text
+artifacts/
+    93f418aa-7a91-48de-a765-bc6249921e77.json
+```
+
+Example content:
+
+```json
+{
+  "id": "93f418aa-7a91-48de-a765-bc6249921e77",
+  "spaceId": "550e8400-e29b-41d4-a716-446655440000",
+  "type": "knowledge",
+  "title": "Understanding useEffect",
+  "description": "Personal notes about the React useEffect hook.",
+  "tags": ["react", "hooks"],
+  "blocks": [],
+  "attachments": [],
+  "relationships": [],
+  "version": 4,
+  "createdAt": "2026-07-14T10:30:00Z",
+  "updatedAt": "2026-07-14T12:00:00Z",
+  "archived": false,
+  "favorite": false
+}
+```
+
+One Artifact is the primary synchronization and persistence unit.
+
+Do not create separate physical storage systems for Bugs, Snippets, Resources, Knowledge, Ideas, or Goals.
+
+They are all Artifact types using one common model.
+
+---
+
+# 11. Block Storage
+
+For the initial version, Blocks must be embedded directly inside their parent Artifact JSON.
+
+Example:
+
+```json
+{
+  "id": "artifact-uuid",
+  "type": "knowledge",
+  "title": "Understanding useEffect",
+  "blocks": [
+    {
+      "id": "block-uuid-1",
+      "type": "paragraph",
+      "position": 0,
+      "content": {
+        "text": "useEffect synchronizes a component with external systems."
+      }
+    },
+    {
+      "id": "block-uuid-2",
+      "type": "code",
+      "position": 1,
+      "content": {
+        "language": "javascript",
+        "code": "useEffect(() => {\n  // effect\n}, []);"
+      }
+    }
+  ]
+}
+```
+
+Do not create one cloud file for every Block.
+
+The Artifact is the correct persistence unit because creating one file per Block would produce excessive cloud API operations.
+
+---
+
+# 12. Attachment Storage
+
+Never store screenshots, images, PDFs, audio, video, ZIP files, or large documents as Base64 inside JSON.
+
+Store them as separate binary files.
+
+Example:
+
+```text
+spaces/
+    {space-id}/
+        artifacts/
+            {artifact-id}.json
+
+        attachments/
+            {attachment-id}.png
+            {attachment-id}.pdf
+            {attachment-id}.mp3
+```
+
+The Artifact JSON stores attachment references:
+
+```json
+{
+  "attachments": [
+    {
+      "id": "attachment-uuid",
+      "originalFileName": "firebase-error.png",
+      "mimeType": "image/png",
+      "size": 2458102,
+      "storagePath": "spaces/{space-id}/attachments/{attachment-id}.png"
+    }
+  ]
+}
+```
+
+Use immutable UUIDs for attachments.
+
+Never depend on original filenames for identity.
+
+---
+
+# 13. Resource Storage
+
+Online resources such as documentation, articles, GitHub repositories, YouTube videos, blogs, research papers, and websites should be stored as Resource Artifacts.
+
+A Resource Artifact should contain:
+
+* ID
+* Title
+* URL
+* Source type
+* Description
+* Personal notes
+* Tags
+* Preview image reference
+* Optional screenshot
+* Created date
+* Updated date
+
+Example:
+
+```json
+{
+  "id": "resource-uuid",
+  "spaceId": "react-space-uuid",
+  "type": "resource",
+  "title": "React Official Documentation",
+  "metadata": {
+    "url": "https://react.dev",
+    "sourceType": "documentation"
+  },
+  "blocks": [
+    {
+      "id": "block-uuid",
+      "type": "paragraph",
+      "position": 0,
+      "content": {
+        "text": "Useful reference for React hooks and component architecture."
+      }
+    }
+  ]
+}
+```
+
+Constella stores the reference and the user's knowledge about that resource.
+
+It should not duplicate entire third-party websites unless explicitly supported by a future archival feature.
+
+---
+
+# 14. Application Startup Flow
+
+When the user opens Constella:
+
+```text
+Open Application
+    ↓
+Check Authentication Session
+    ↓
+Identify Connected BYOS Provider
+    ↓
+Initialize Storage Adapter
+    ↓
+Locate Constella Root Directory
+    ↓
+Download manifest.json
+    ↓
+Load Universe Metadata
+    ↓
+Load Space Summaries
+    ↓
+Render Home Screen
+```
+
+Do not download every Artifact and attachment during initial application startup.
+
+Use progressive loading.
+
+Load only the metadata required for the initial UI.
+
+---
+
+# 15. Opening a Space
+
+When a user opens a Space:
+
+```text
+Select Space
+    ↓
+Read Space Metadata
+    ↓
+Load Artifact Summaries
+    ↓
+Load Dashboard Configuration
+    ↓
+Render Space
+```
+
+Do not download all large attachments.
+
+Attachments should load only when needed.
+
+---
+
+# 16. Opening an Artifact
+
+When the user opens an Artifact:
+
+```text
+Select Artifact
+    ↓
+Check In-Memory Cache
+    ↓
+If Missing:
+    Fetch Artifact JSON from BYOS Provider
+    ↓
+Parse Blocks
+    ↓
+Load Attachment Metadata
+    ↓
+Render Editor
+```
+
+Large attachment binaries should be fetched only when required.
+
+---
+
+# 17. Save Flow
+
+The application must not call the cloud provider API after every keystroke.
+
+Use this flow:
+
+```text
+User Types
+    ↓
+Update React State Immediately
+    ↓
+Debounce Changes
+    ↓
+Serialize Latest Artifact
+    ↓
+Write Artifact JSON to BYOS Provider
+    ↓
+Confirm Persistence
+    ↓
+Show "Saved"
+```
+
+Recommended initial debounce:
+
+Approximately 1 to 3 seconds after the user stops editing.
+
+Do not treat this number as permanent configuration. Make it configurable internally.
+
+If the user continues typing, cancel the previous scheduled write and persist only the newest state.
+
+---
+
+# 18. Save States
+
+The UI must clearly display one of these states:
+
+```text
+Editing
+
+Unsaved Changes
+
+Saving
+
+Saved
+
+Save Failed
+
+Offline
+
+Conflict
+```
+
+Because there is no local persistent database, never display "Saved" until the active BYOS provider confirms persistence.
+
+This is a critical architectural rule.
+
+---
+
+# 19. Temporary In-Memory Cache
+
+The application may use temporary in-memory caching during the active browser session.
+
+The cache may contain:
+
+* Recently opened Spaces
+* Recently opened Artifacts
+* Artifact summaries
+* Searchable metadata
+* Current editor state
+* Provider metadata
+* Temporary thumbnails
+
+The in-memory cache disappears when the browser session ends.
+
+It is not a persistent source of truth.
+
+Do not use IndexedDB as a hidden persistent database.
+
+---
+
+# 20. Search Architecture
+
+Since there is no local persistent database, search requires special handling.
+
+The application must maintain lightweight searchable metadata in BYOS storage.
+
+Recommended structure:
+
+```text
+Constella/
+    indexes/
+        spaces-index.json
+        artifacts-index.json
+```
+
+The Artifact index stores lightweight metadata:
+
+```json
+{
+  "artifacts": [
+    {
+      "id": "artifact-uuid",
+      "spaceId": "space-uuid",
+      "type": "knowledge",
+      "title": "Understanding useEffect",
+      "tags": ["react", "hooks"],
+      "searchText": "understanding useeffect react hooks component lifecycle",
+      "updatedAt": "2026-07-14T12:00:00Z"
+    }
+  ]
+}
+```
+
+On application startup, download the lightweight indexes into memory.
+
+Search the in-memory index.
+
+Do not query every Artifact file during each search.
+
+---
+
+# 21. Search Index Update Flow
+
+Whenever an Artifact is successfully saved:
+
+```text
+Save Artifact JSON
+    ↓
+Update In-Memory Search Index
+    ↓
+Mark Search Index Dirty
+    ↓
+Debounce Index Persistence
+    ↓
+Upload Updated Index File
+```
+
+Do not rewrite the index file after every keystroke.
+
+Index persistence should be batched and debounced.
+
+---
+
+# 22. Multi-Device Change Detection
+
+The application must detect changes made from another device.
+
+Use provider-native change APIs where available.
+
+Examples include provider delta or change cursors.
+
+The Storage Adapter should expose a provider-independent change-detection operation.
+
+Conceptually:
+
+```text
+getChanges(cursor)
+```
+
+It should return:
+
+* Created files
+* Updated files
+* Deleted files
+* New cursor
+
+The application should store the latest provider cursor in its BYOS metadata.
+
+---
+
+# 23. Conflict Handling
+
+Every Artifact must contain:
+
+* ID
+* Version
+* Updated timestamp
+* Last known base version
+* Device identifier
+
+Before overwriting an existing Artifact:
+
+```text
+Fetch Remote Metadata
+    ↓
+Compare Remote Version
+    ↓
+Remote Equals Expected Base Version?
+    ├── Yes → Save New Version
+    └── No  → Conflict
+```
+
+On conflict, never silently overwrite knowledge.
+
+Preserve both versions.
+
+Show:
+
+* Keep Current Version
+* Keep Remote Version
+* Keep Both
+* Compare and Merge
+
+---
+
+# 24. Provider Failure Behavior
+
+If the selected cloud provider becomes unavailable:
+
+```text
+Save Attempt
+    ↓
+Provider Fails
+    ↓
+Keep Current Unsaved Data in Memory
+    ↓
+Show "Save Failed" or "Offline"
+    ↓
+Retry While Session Remains Active
+```
+
+Because this architecture intentionally has no persistent local database, closing the browser before a failed save succeeds may result in loss of unsaved session changes.
+
+The UI must communicate this clearly.
+
+Do not falsely claim that unsaved changes are protected after browser closure.
+
+---
+
+# 25. Authentication
+
+Use OAuth 2.0 for:
+
+* Google Drive
+* OneDrive
+* Dropbox
+
+Never request or store provider passwords.
+
+Provider tokens must not be exposed unnecessarily.
+
+If the architecture uses a backend-for-frontend for OAuth token exchange, it must not store user knowledge.
+
+The backend may only handle authentication-related operations where required.
+
+---
+
+# 26. Provider Selection During Onboarding
+
+Initial flow:
+
+```text
+Welcome to Constella
+
+Choose where your Universe should live:
+
+○ Google Drive
+○ Microsoft OneDrive
+○ Dropbox
+```
+
+After selection:
+
+```text
+Connect Provider
+    ↓
+OAuth Authorization
+    ↓
+Check for Existing Constella Universe
+    ↓
+Existing Universe Found?
+    ├── Yes → Load Universe
+    └── No  → Create New Universe
+```
+
+The application should not require its own separate database account for storing user knowledge.
+
+---
+
+# 27. Provider Switching
+
+Changing the provider must be treated as a migration.
+
+Example:
+
+```text
+Google Drive
+    ↓
+Export Complete Universe
+    ↓
+Connect Dropbox
+    ↓
+Create Constella Structure
+    ↓
+Copy Spaces
+    ↓
+Copy Artifacts
+    ↓
+Copy Attachments
+    ↓
+Verify
+    ↓
+Switch Active Provider
+```
+
+Never change the active provider until migration verification succeeds.
+
+---
+
+# 28. Required Development Rules
+
+The following rules are mandatory:
+
+1. Do not use IndexedDB.
+
+2. Do not use SQLite.
+
+3. Do not use Firebase, Firestore, Supabase, MongoDB, PostgreSQL, or another application database for persistent user knowledge.
+
+4. The selected BYOS provider is the authoritative persistent source of truth.
+
+5. Google Drive, OneDrive, and Dropbox must be hidden behind a common Storage Adapter interface.
+
+6. No UI component may directly call provider APIs.
+
+7. One Artifact should be one independently persisted JSON document.
+
+8. Blocks should initially live inside their parent Artifact JSON.
+
+9. Large files must be stored separately from JSON metadata.
+
+10. Never use titles or filenames as IDs. Use UUIDs.
+
+11. Never upload on every keystroke.
+
+12. Search should use lightweight indexes loaded into memory.
+
+13. Initial startup must use progressive loading.
+
+14. Large media must be lazy-loaded.
+
+15. Never silently overwrite conflicting knowledge.
+
+16. Never display "Saved" until the BYOS provider confirms persistence.
+
+17. The complete Universe must be reconstructable using only the files stored in the user's selected provider.
+
+18. The application must remain provider-independent.
+
+19. User knowledge must never depend on developer-owned persistent storage.
+
+20. The implementation must prioritize data integrity over convenience.
+
+---
+
+# 29. Final Architecture
+
+The final Constella storage architecture is:
+
+```text
+                          CONSTELLA WEB APPLICATION
+
+                                      │
+                                      ▼
+
+                            React / TypeScript UI
+
+                                      │
+                                      ▼
+
+                          In-Memory Application State
+
+                                      │
+                                      ▼
+
+                              Repository Layer
+
+                                      │
+                                      ▼
+
+                               Storage Engine
+
+                    ┌─────────────────┼─────────────────┐
+                    │                 │                 │
+                    ▼                 ▼                 ▼
+
+             Google Drive        OneDrive          Dropbox
+
+                    │                 │                 │
+                    └─────────────────┼─────────────────┘
+                                      │
+                                      ▼
+
+                         USER-OWNED PERSISTENT DATA
+```
+
+The selected cloud provider stores the complete Universe.
+
+Constella provides the interface through which that Universe is created, organized, searched, connected and evolved.
+
+No local persistent database is required.
+
+No developer-owned database is required for user knowledge.
+
+The user's cloud storage is the database-like persistence layer.
+
+The application's responsibility is to make that storage structure reliable, searchable, efficient and invisible to the user.

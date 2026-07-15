@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSpaceStore } from '../../stores/spaceStore';
+import { createArtifact } from '../../services/cloudRepository';
 import type { Space } from '../../types';
 import { X, BookOpen, Rocket, Cloud, Sparkles, User, File } from 'lucide-react';
 
@@ -70,9 +71,7 @@ export const SpaceCreationModal: React.FC<SpaceCreationModalProps> = ({ onClose 
 
     const id = await createSpace(newSpace);
     
-    // Add suggested goals
     const goalsList = SUGGESTED_GOALS[selectedTemplate] || [];
-    const db = await import('../../db/database');
     const { searchIndexManager } = await import('../../search/searchIndex');
     for (const title of goalsList) {
       const goalArt = {
@@ -90,7 +89,7 @@ export const SpaceCreationModal: React.FC<SpaceCreationModalProps> = ({ onClose 
         updatedAt: Date.now(),
         metadata: {}
       };
-      await db.default.artifacts.put(goalArt);
+      await createArtifact(goalArt);
       searchIndexManager.indexArtifact(goalArt);
     }
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AppLayout } from '../components/layout/AppLayout';
 import type { Space, Artifact } from '../types';
-import { db } from '../db/database';
+import { getAllSpaces, getAllArtifacts } from '../services/cloudRepository';
 import { useSpaceStore } from '../stores/spaceStore';
 import { useArtifactStore } from '../stores/artifactStore';
 import { RotateCcw, Trash2, FileText } from 'lucide-react';
@@ -15,10 +15,10 @@ export const ArchivePage: React.FC = () => {
   const { updateArtifact, deleteArtifact } = useArtifactStore();
 
   const fetchArchived = async () => {
-    const spacesList = await db.spaces.where('archived').equals(1).toArray();
+    const spacesList = (await getAllSpaces()).filter(space => space.archived);
     setArchivedSpaces(spacesList);
 
-    const artsList = await db.artifacts.where('status').equals('archived').toArray();
+    const artsList = (await getAllArtifacts()).filter(artifact => artifact.status === 'archived');
     setArchivedArtifacts(artsList);
   };
 

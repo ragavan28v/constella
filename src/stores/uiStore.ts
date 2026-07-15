@@ -15,13 +15,12 @@ interface UIState {
 export const useUIStore = create<UIState>((set) => ({
   sidebarCollapsed: false,
   inspectorOpen: false,
-  theme: (localStorage.getItem('theme') as 'light' | 'dark') || 'light',
+  theme: 'light',
   activeTab: 'dashboard',
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
   setInspectorOpen: (open) => set({ inspectorOpen: open }),
   setTheme: (theme) => {
-    localStorage.setItem('theme', theme);
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {

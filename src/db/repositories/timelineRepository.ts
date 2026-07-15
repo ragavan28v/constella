@@ -1,20 +1,15 @@
-import { db } from '../database';
 import type { TimelineEvent } from '../../types';
+import {
+  getTimelineEventsBySpaceId,
+  getRecentTimelineEvents
+} from '../../services/cloudRepository';
 
 export const timelineRepository = {
   async getBySpaceId(spaceId: string): Promise<TimelineEvent[]> {
-    return db.timelineEvents
-      .where('spaceId')
-      .equals(spaceId)
-      .reverse()
-      .sortBy('timestamp');
+    return getTimelineEventsBySpaceId(spaceId);
   },
 
   async getRecentEvents(limit: number = 20): Promise<TimelineEvent[]> {
-    return db.timelineEvents
-      .orderBy('timestamp')
-      .reverse()
-      .limit(limit)
-      .toArray();
+    return getRecentTimelineEvents(limit);
   }
 };

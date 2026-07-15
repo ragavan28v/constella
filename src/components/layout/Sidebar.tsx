@@ -193,7 +193,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNewSpaceOpen }) => {
         </button>
         <div className="w-full flex items-center gap-3 px-3 py-2 text-xs text-text-tertiary">
           <HardDrive className="w-4 h-4 flex-shrink-0" />
-          {!sidebarCollapsed && <span>IndexedDB</span>}
+          {!sidebarCollapsed && <span>Cloud Workspace</span>}
         </div>
       </div>
     </aside>

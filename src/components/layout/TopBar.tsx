@@ -3,6 +3,7 @@ import { Search, Plus, Sun, Moon, Database, Bell, Menu } from 'lucide-react';
 import { useSearchStore } from '../../stores/searchStore';
 import { useUIStore } from '../../stores/uiStore';
 import { useSpaceStore } from '../../stores/spaceStore';
+import { useAuthStore } from '../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
 
 interface TopBarProps {
@@ -13,9 +14,12 @@ export const TopBar: React.FC<TopBarProps> = ({ onQuickCaptureOpen }) => {
   const { setSearchOpen } = useSearchStore();
   const { theme, setTheme, toggleSidebar } = useUIStore();
   const { activeSpaceId, spaces } = useSpaceStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
 
   const activeSpace = spaces.find(s => s.id === activeSpaceId);
+  const userInitial = user?.displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U';
+  const isCloudMode = Boolean(user);
 
   return (
     <header className="h-14 border-b border-border bg-app-surface px-4 flex items-center justify-between select-none">
@@ -66,10 +70,10 @@ export const TopBar: React.FC<TopBarProps> = ({ onQuickCaptureOpen }) => {
           <span className="hidden sm:inline pr-1">Capture</span>
         </button>
 
-        {/* Local-Only Status Indicator */}
-        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-success-light border border-success/20 rounded-full text-success text-[11px] font-medium">
+        {/* Cloud / Local Status Indicator */}
+        <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${isCloudMode ? 'bg-accent-light border border-accent text-accent' : 'bg-success-light border border-success/20 text-success'}`}>
           <Database className="w-3.5 h-3.5" />
-          <span>Local Mode</span>
+          <span>{isCloudMode ? 'Cloud Connected' : 'Local Mode'}</span>
         </div>
 
         {/* Theme Toggle */}
@@ -95,8 +99,9 @@ export const TopBar: React.FC<TopBarProps> = ({ onQuickCaptureOpen }) => {
         <div 
           onClick={() => navigate('/settings')}
           className="w-8 h-8 rounded-full bg-app-selected hover:opacity-90 cursor-pointer border border-border flex items-center justify-center text-accent font-semibold text-xs transition-opacity"
+          title={user ? `${user.displayName || user.email}` : 'Open settings'}
         >
-          U
+          {userInitial}
         </div>
       </div>
     </header>

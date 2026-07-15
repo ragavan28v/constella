@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Space } from '../../types';
-import { db } from '../../db/database';
+import { getArtifactsBySpaceId } from '../../services/cloudRepository';
 import { Star, Trash2, Archive } from 'lucide-react';
 import { useSpaceStore } from '../../stores/spaceStore';
 import { useNavigate } from 'react-router-dom';
@@ -16,8 +16,8 @@ export const SpaceCard: React.FC<SpaceCardProps> = ({ space }) => {
 
   useEffect(() => {
     const fetchCount = async () => {
-      const count = await db.artifacts.where('spaceId').equals(space.id).count();
-      setArtifactCount(count);
+      const artifacts = await getArtifactsBySpaceId(space.id);
+      setArtifactCount(artifacts.length);
     };
     fetchCount();
   }, [space.id]);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { Space, Artifact, TimelineEvent } from '../../types';
-import { db } from '../../db/database';
+import { getAllArtifacts, getTimelineEventsBySpaceId } from '../../services/cloudRepository';
 import { Star, Target, Sparkles, AlertCircle, Clock, Plus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -24,35 +24,15 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
 
   useEffect(() => {
     const loadDashboardData = async () => {
-      // Load pinned
-      const pins = await db.artifacts
-        .where('spaceId')
-        .equals(space.id)
-        .filter(a => a.favorite && !a.archived)
-        .toArray();
-      setPinned(pins);
+      const allArtifacts = await getAllArtifacts();
+      const spaceArtifacts = allArtifacts.filter(a => a.spaceId === space.id && !a.archived);
 
-      // Load goals
-      const spaceGoals = await db.artifacts
-        .where('spaceId')
-        .equals(space.id)
-        .filter(a => a.type === 'goal' && !a.archived)
-        .toArray();
-      setGoals(spaceGoals);
+      setPinned(spaceArtifacts.filter(a => a.favorite));
+      setGoals(spaceArtifacts.filter(a => a.type === 'goal'));
+      setArtifactNames(Object.fromEntries(spaceArtifacts.map(a => [a.id, a.title])));
 
-      // Load events
-      const spaceEvents = await db.timelineEvents
-        .where('spaceId')
-        .equals(space.id)
-        .reverse()
-        .sortBy('timestamp');
+      const spaceEvents = await getTimelineEventsBySpaceId(space.id);
       setEvents(spaceEvents.slice(0, 5));
-
-      // Resolve names
-      const allArts = await db.artifacts.where('spaceId').equals(space.id).toArray();
-      const aMap: Record<string, string> = {};
-      allArts.forEach(a => { aMap[a.id] = a.title; });
-      setArtifactNames(aMap);
     };
     loadDashboardData();
   }, [space.id]);

@@ -1,6 +1,7 @@
 import { Index } from 'flexsearch';
 import type { Artifact } from '../types';
-import { db } from '../db/database';
+import { cloudStorageEngine } from '../services/storage';
+import { getAllArtifacts } from '../services/cloudRepository';
 
 // Instantiate index with default tokenization
 const searchIndex = new Index({
@@ -29,11 +30,14 @@ export const searchIndexManager = {
   },
 
   async initialize() {
+    if (!cloudStorageEngine.isConnected()) {
+      return;
+    }
+
     searchIndex.clear();
     documentMap.clear();
     
-    // Load all active artifacts
-    const artifacts = await db.artifacts.toArray();
+    const artifacts = await getAllArtifacts();
     for (const artifact of artifacts) {
       if (artifact.status !== 'archived') {
         this.indexArtifact(artifact);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Artifact, Block } from '../../types';
 import { useArtifactStore } from '../../stores/artifactStore';
-import { blockRepository } from '../../db/repositories/blockRepository';
+import { getArtifactById, getBlocksByArtifactId, saveBlocks } from '../../services/cloudRepository';
 import { BlockEditor } from '../editor/BlockEditor';
 import { ArrowLeft, Plus, X, Tag } from 'lucide-react';
 
@@ -26,18 +26,15 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ artifactId, onCl
   // Load artifact details and blocks
   useEffect(() => {
     const fetchArtifact = async () => {
-      const db = await import('../../db/database');
-      const art = await db.default.artifacts.get(artifactId);
+      const art = await getArtifactById(artifactId);
       if (art) {
         setArtifact(art);
         setTitle(art.title);
         setDescription(art.description || '');
         setTags(art.tags || []);
-        
-        // Load blocks
-        const blocks = await blockRepository.getByArtifactId(artifactId);
+
+        const blocks = await getBlocksByArtifactId(artifactId);
         if (blocks.length > 0) {
-          // TipTap JSON is stored in the content field of the first block or as structured nodes
           setContent(blocks[0].content);
         } else {
           setContent('');
@@ -74,7 +71,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ artifactId, onCl
             content: updatedFields.content,
             metadata: {}
           };
-          await blockRepository.saveBlocks(artifactId, [blockObj]);
+          await saveBlocks(artifactId, [blockObj]);
         }
 
         setSaveStatus('saved');
